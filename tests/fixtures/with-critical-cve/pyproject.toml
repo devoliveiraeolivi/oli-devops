@@ -2,9 +2,13 @@
 name = "cve-fixture"
 version = "0.1.0"
 # Intentionally pinned to a version with a known CRITICAL CVE with fix available.
-# This must be periodically refreshed as CVEs get old and fall out of Trivy's DB.
-# At bootstrap time, pick a package+version combination known to trigger a CRITICAL.
-# Candidate: pyyaml < 5.4 (CVE-2020-14343, CRITICAL, fixed in 5.4)
+# pyyaml 5.3.1 → CVE-2020-14343 (CVSS 9.8, CRITICAL, fixed in 5.4).
+# Trivy's vulnerability DB is cumulative — old CVEs do NOT age out. If this
+# fixture ever stops triggering the self-test, the cause is almost always
+# one of: (a) Trivy parser change in pyproject.toml handling, (b) pyyaml
+# removed from PyPI, or (c) upstream re-classification. See the companion
+# `requirements.txt` in this directory — it acts as a lockfile for Trivy's
+# pip analyzer, which is more reliable than pyproject.toml-only detection.
 dependencies = [
   "pyyaml==5.3.1",
 ]

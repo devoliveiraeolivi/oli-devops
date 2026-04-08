@@ -1,0 +1,4 @@
+# Companion lockfile for pyproject.toml — ensures Trivy's pip analyzer picks
+# up the vulnerability even if pyproject.toml handling changes. Keep in sync
+# with pyproject.toml dependencies.
+pyyaml==5.3.1
