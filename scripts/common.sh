@@ -4,6 +4,12 @@
 
 set -euo pipefail
 
+# Include guard — prevent double-source errors from readonly re-assignment.
+if [[ -n "${__OLI_DEVOPS_COMMON_SH_LOADED:-}" ]]; then
+  return 0
+fi
+readonly __OLI_DEVOPS_COMMON_SH_LOADED=1
+
 # ----- Tool versions (single source of truth) -----
 # Bumped in MINOR/PATCH releases per policies/SEMVER.md.
 # VERIFY current versions before committing — see Task 3 Step 1.
@@ -11,11 +17,12 @@ readonly TRIVY_VERSION="0.69.3"
 readonly GITLEAKS_VERSION="8.30.1"
 
 # ----- Colors -----
-if [[ -t 1 ]]; then
-  readonly RED='\033[0;31m'
-  readonly GREEN='\033[0;32m'
-  readonly YELLOW='\033[1;33m'
-  readonly NC='\033[0m'
+# Check stderr (fd 2) because log functions write to stderr.
+if [[ -t 2 ]]; then
+  readonly RED=$'\033[0;31m'
+  readonly GREEN=$'\033[0;32m'
+  readonly YELLOW=$'\033[1;33m'
+  readonly NC=$'\033[0m'
 else
   readonly RED=''
   readonly GREEN=''
@@ -24,15 +31,15 @@ else
 fi
 
 log_info() {
-  printf "${GREEN}[oli-devops]${NC} %s\n" "$*" >&2
+  printf '%s[oli-devops]%s %s\n' "$GREEN" "$NC" "$*" >&2
 }
 
 log_warn() {
-  printf "${YELLOW}[oli-devops]${NC} %s\n" "$*" >&2
+  printf '%s[oli-devops]%s %s\n' "$YELLOW" "$NC" "$*" >&2
 }
 
 log_error() {
-  printf "${RED}[oli-devops]${NC} %s\n" "$*" >&2
+  printf '%s[oli-devops]%s %s\n' "$RED" "$NC" "$*" >&2
 }
 
 # ----- Docker detection -----
