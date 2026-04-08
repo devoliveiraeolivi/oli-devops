@@ -1,0 +1,10 @@
+[project]
+name = "cve-fixture"
+version = "0.1.0"
+# Intentionally pinned to a version with a known CRITICAL CVE with fix available.
+# This must be periodically refreshed as CVEs get old and fall out of Trivy's DB.
+# At bootstrap time, pick a package+version combination known to trigger a CRITICAL.
+# Candidate: pyyaml < 5.4 (CVE-2020-14343, CRITICAL, fixed in 5.4)
+dependencies = [
+  "pyyaml==5.3.1",
+]
