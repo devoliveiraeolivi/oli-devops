@@ -13,7 +13,9 @@ readonly __OLI_DEVOPS_COMMON_SH_LOADED=1
 # ----- Tool versions (single source of truth) -----
 # Bumped in MINOR/PATCH releases per policies/SEMVER.md.
 # VERIFY current versions before committing — see Task 3 Step 1.
+# shellcheck disable=SC2034  # referenced by sourcing scripts (trivy-fs.sh, gitleaks-protect.sh)
 readonly TRIVY_VERSION="0.69.3"
+# shellcheck disable=SC2034  # referenced by sourcing scripts
 readonly GITLEAKS_VERSION="8.30.1"
 
 # ----- Colors -----

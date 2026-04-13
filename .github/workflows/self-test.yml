@@ -16,7 +16,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -qq shellcheck
-          shellcheck scripts/*.sh
+          shellcheck -x scripts/*.sh
 
   yamllint:
     name: YAML lint
