@@ -23,9 +23,9 @@ fi
 
 check_docker || exit 1
 
-log_info "using gitleaks via docker: zricethezav/gitleaks:v${GITLEAKS_VERSION}"
+log_info "using gitleaks via docker: ghcr.io/gitleaks/gitleaks:v${GITLEAKS_VERSION}"
 MSYS_NO_PATHCONV=1 exec docker run --rm \
-  -v "$(docker_pwd):/repo" \
+  -v "$(docker_pwd):/repo:ro" \
   -w /repo \
-  "zricethezav/gitleaks:v${GITLEAKS_VERSION}" \
+  "ghcr.io/gitleaks/gitleaks:v${GITLEAKS_VERSION}" \
   "${GITLEAKS_ARGS[@]}"
