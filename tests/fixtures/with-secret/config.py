@@ -1,4 +1,7 @@
 # This is a test fixture — not a real secret.
-# AKIA is the AWS access key prefix, the rest is random.
-AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"
-AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+# Gitleaks allowlists the canonical AWS docs example (AKIAIOSFODNN7EXAMPLE)
+# to avoid false positives in documentation, so this fixture uses a
+# fabricated AKIA that matches the aws-access-token regex without being
+# on the allowlist.
+AWS_ACCESS_KEY_ID = "AKIAZ4XQFAKEKEYABCDE"
+AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYzZZZ12345"
