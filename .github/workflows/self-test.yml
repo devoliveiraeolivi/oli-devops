@@ -1,0 +1,121 @@
+name: self-test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  shellcheck:
+    name: Shellcheck scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run shellcheck
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq shellcheck
+          shellcheck scripts/*.sh
+
+  yamllint:
+    name: YAML lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install yamllint
+        run: pip install yamllint
+      - name: Lint YAML files
+        run: |
+          yamllint -d '{extends: default, rules: {line-length: {max: 140}, document-start: disable, truthy: {check-keys: false}}}' \
+            .pre-commit-hooks.yaml \
+            .github/workflows/
+
+  pre-commit-hooks-schema:
+    name: Validate .pre-commit-hooks.yaml schema
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pre-commit
+        run: pip install pre-commit
+      - name: Attempt to load hooks from this repo
+        run: |
+          TMP=$(mktemp -d)
+          cd "$TMP"
+          git init -q
+          cat > .pre-commit-config.yaml <<YAML
+          repos:
+            - repo: file://${GITHUB_WORKSPACE}
+              rev: HEAD
+              hooks:
+                - id: trivy-fs
+                - id: gitleaks
+          YAML
+          git add .
+          pre-commit install-hooks
+
+  trivy-fs-clean:
+    name: trivy-fs.sh on clean fixture (should pass)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run script against clean fixture
+        working-directory: tests/fixtures/clean
+        run: bash ../../../scripts/trivy-fs.sh
+
+  trivy-fs-critical:
+    name: trivy-fs.sh on with-critical-cve fixture (should fail)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run script against critical CVE fixture (expect exit 1)
+        working-directory: tests/fixtures/with-critical-cve
+        run: |
+          set +e
+          bash ../../../scripts/trivy-fs.sh
+          EXIT=$?
+          set -e
+          if [[ "$EXIT" != "1" ]]; then
+            echo "::error::Expected exit 1, got $EXIT — fixture may be stale"
+            exit 2
+          fi
+          echo "Expected failure confirmed."
+
+  gitleaks-clean:
+    name: gitleaks-protect.sh on clean fixture (should pass)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up fixture as temp git repo
+        run: |
+          TMP=$(mktemp -d)
+          cp tests/fixtures/clean/pyproject.toml "$TMP/"
+          cd "$TMP"
+          git init -q
+          git add .
+          bash "${GITHUB_WORKSPACE}/scripts/gitleaks-protect.sh"
+
+  gitleaks-secret:
+    name: gitleaks-protect.sh on with-secret fixture (should fail)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up fixture as temp git repo and expect failure
+        run: |
+          TMP=$(mktemp -d)
+          cp tests/fixtures/with-secret/config.py "$TMP/"
+          cd "$TMP"
+          git init -q
+          git add .
+          set +e
+          bash "${GITHUB_WORKSPACE}/scripts/gitleaks-protect.sh"
+          EXIT=$?
+          set -e
+          if [[ "$EXIT" != "1" ]]; then
+            echo "::error::Expected exit 1, got $EXIT — gitleaks did not catch the secret"
+            exit 2
+          fi
+          echo "Expected failure confirmed."
