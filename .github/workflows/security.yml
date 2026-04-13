@@ -23,6 +23,12 @@ on:
         type: number
         default: 0
 
+# Least-privilege default for the workflow. Consumers can grant more
+# at the caller site (e.g. pull-requests: write if they want gitleaks
+# to post PR annotations). gitleaks-action@v2 only requires contents:read.
+permissions:
+  contents: read
+
 jobs:
   trivy-image:
     name: Trivy Image Scan
