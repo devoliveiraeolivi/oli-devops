@@ -1,0 +1,22 @@
+- id: trivy-fs
+  name: Trivy filesystem scan (CRITICAL, fixed only)
+  description: >-
+    Scans the repo for vulnerabilities, secrets, and misconfigurations.
+    Fails only on CRITICAL severity with a fix available, plus CRITICAL
+    Dockerfile misconfigurations. See oli-devops/policies/ENFORCEMENT.md.
+  entry: scripts/trivy-fs.sh
+  language: script
+  pass_filenames: false
+  always_run: true
+  require_serial: true
+
+- id: gitleaks
+  name: Gitleaks secrets scan (staged files)
+  description: >-
+    Scans staged files for secrets (API keys, tokens, credentials).
+    Fails on any detection. Uses 'gitleaks protect --staged'.
+  entry: scripts/gitleaks-protect.sh
+  language: script
+  pass_filenames: false
+  always_run: true
+  require_serial: true
