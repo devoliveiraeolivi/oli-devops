@@ -1,0 +1,10 @@
+# Drop-in snippet for .github/workflows/ci.yml (js-docker profile)
+# Add this as a job inside the `jobs:` block.
+# Requires: repo has a Dockerfile at root (or specify `dockerfile:` input).
+
+  security-baseline:
+    name: Security Baseline (oli-devops)
+    uses: devoliveiraeolivi/oli-devops/.github/workflows/security.yml@v1.0.0
+    with:
+      image-name: REPLACE_WITH_REPO_NAME  # e.g., oli-ops
+      # dockerfile: Dockerfile

@@ -1,0 +1,10 @@
+# Security baseline from oli-devops.
+# Consumers merge this with their own hooks (do not overwrite existing).
+# See: https://github.com/devoliveiraeolivi/oli-devops/blob/main/docs/ONBOARDING.md
+
+repos:
+  - repo: https://github.com/devoliveiraeolivi/oli-devops
+    rev: v1.0.0  # pinned exact — Renovate propagates bumps
+    hooks:
+      - id: trivy-fs
+      - id: gitleaks
