@@ -1,5 +1,7 @@
 # CLAUDE.md — oli-devops
 
+> **Arquitetura cross-repo:** Este repo faz parte do ecossistema OLI. Para decisões arquiteturais, ADRs, princípios cross-cutting e specs cross-repo, consulte [`oli-platform`](https://github.com/devoliveiraeolivi/oli-platform) — repositório-norte do ecossistema.
+
 Instructions for AI assistants (Claude Code, Claude Agent SDK) working in
 this repo.
 
