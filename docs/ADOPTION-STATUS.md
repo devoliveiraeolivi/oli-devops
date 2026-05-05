@@ -12,6 +12,8 @@ Updated as part of each onboarding PR (Step 11 of ONBOARDING.md).
 | oli-indexer | python-docker | — | — | pending |
 | oli-scraper | python-docker | — | — | pending — merge with existing pre-commit |
 | oli-ops | js-docker | — | — | pending — first js-docker consumer |
+| oli-vault | python-only | — | — | pending — no root Dockerfile |
+| anp-bi-etl | python-only | — | — | pending |
 
 ## Phase 2 (planned)
 
@@ -28,8 +30,8 @@ Updated as part of each onboarding PR (Step 11 of ONBOARDING.md).
 ## Phase 3+ (backlog)
 
 Python-only repos (no Docker): anp-bi-etl, oli-agent, oli-distribuidoras,
-oli-juris, oli-vault. These need a `python-only` profile that uses only
-`trivy fs` (no image scan).
+oli-juris. Profile `python-only` now available (v1.1.0) — see Phase 1 above
+for oli-vault onboarding.
 
 Inactive/TBD: salesforce-etl, oli-monitor, oli-prazos, oli-llm, aasp-apex,
 split-pdf.

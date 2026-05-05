@@ -29,6 +29,7 @@ executes these same steps.
 |---|---|
 | `pyproject.toml` + `Dockerfile` | `python-docker` |
 | `package.json` + `Dockerfile` | `js-docker` |
+| `pyproject.toml` only (no `Dockerfile`) | `python-only` |
 | `Dockerfile` only (no language manifest) | `docker-only` (Phase 2+) |
 | Neither | **not yet supported** — stop |
 
@@ -93,6 +94,13 @@ Re-run `pre-commit run --all-files` until it passes cleanly.
 `suppression-format-check` hook.
 
 ### Step 5 — Update ci.yml
+
+**If the repo has no existing ci.yml** (most new repos in the OLI ecosystem):
+- Instead of editing ci.yml, create a new standalone file:
+  `cp "$OLIDEVOPS/templates/$PROFILE/ci-security-standalone.yml" .github/workflows/security-baseline.yml`
+- Replace `REPLACE_WITH_REPO_NAME` with the actual repo name (for python-docker/js-docker).
+- For `python-only` profile, no replacement needed — no image-name.
+- Skip the rest of Step 5 (no existing job to remove, no job to inject).
 
 Open `.github/workflows/ci.yml` in the target repo.
 

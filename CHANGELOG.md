@@ -6,6 +6,28 @@ follows strict [SemVer](policies/SEMVER.md).
 
 ## [Unreleased]
 
+## [v1.1.0] — 2026-05-05
+
+### Added
+
+- **python-only profile** (`templates/python-only/`): for Python repos without a
+  Dockerfile. Runs `trivy-fs` + `gitleaks` pre-commit hooks; CI layer is gitleaks
+  history scan only (no image build/scan). Unblocks: `oli-vault`, `anp-bi-etl`.
+- **`ci-security-standalone.yml`** template for all profiles: complete standalone
+  GitHub Actions workflow for repos with no existing `ci.yml`. Targets all Grupo A/B
+  consumer repos (oli-gateway, oli-auth, oli-ops, etc.).
+- **`security.yml` optional `image-name` input**: `trivy-image` job is now
+  conditionally skipped when `image-name` is not provided. Fully backward-compatible.
+- **`policies/org-ruleset.json`**: org-level branch ruleset for all `oli-*` repos
+  (enforcement: evaluate until all repos onboarded).
+- **`.github/workflows/audit-adoption.yml`**: weekly audit workflow that opens/
+  updates a GitHub issue listing adoption gaps across the org.
+
+### Migration
+
+No breaking changes. Existing consumers pinned to `v1.0.0` are unaffected.
+Update to `v1.1.0` to access the new python-only profile or standalone CI template.
+
 ## [v1.0.0] - 2026-04-13
 
 Initial release. Establishes the security baseline for OLI repos.
