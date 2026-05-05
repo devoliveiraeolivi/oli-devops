@@ -1,0 +1,8 @@
+# Drop-in snippet for .github/workflows/ci.yml
+# Add this as a job inside the `jobs:` block.
+# python-only profile: no Dockerfile — trivy image scan is skipped.
+
+  security-baseline:
+    name: Security Baseline (oli-devops)
+    uses: devoliveiraeolivi/oli-devops/.github/workflows/security.yml@v1.1.0
+    # No image-name: trivy-image job is conditionally skipped
