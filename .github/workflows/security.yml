@@ -4,9 +4,10 @@ on:
   workflow_call:
     inputs:
       image-name:
-        description: "Docker image name to build and scan (ex: oli-gateway)"
-        required: true
+        description: "Docker image name to build and scan (ex: oli-gateway). Leave empty to skip image scan (python-only profile)."
+        required: false
         type: string
+        default: ""
       dockerfile:
         description: "Path to Dockerfile (relative to repo root)"
         required: false
@@ -32,6 +33,7 @@ permissions:
 jobs:
   trivy-image:
     name: Trivy Image Scan
+    if: inputs['image-name'] != ''
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

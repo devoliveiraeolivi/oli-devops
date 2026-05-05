@@ -1,0 +1,19 @@
+# Standalone security-baseline workflow.
+# Use this if your repo has no existing .github/workflows/ci.yml.
+# If ci.yml exists, use ci-security-job.yml snippet instead.
+name: Security Baseline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  security-baseline:
+    name: Security Baseline (oli-devops)
+    uses: devoliveiraeolivi/oli-devops/.github/workflows/security.yml@v1.0.0
+    with:
+      image-name: REPLACE_WITH_REPO_NAME  # e.g., oli-gateway
+      # dockerfile: Dockerfile   # uncomment if non-default path
+      # build-context: .         # uncomment if non-default context
