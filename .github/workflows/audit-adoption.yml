@@ -1,0 +1,95 @@
+name: audit-adoption
+
+on:
+  schedule:
+    - cron: '0 13 * * 1'  # Mondays 13:00 UTC (10:00 BRT)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      ORG: devoliveiraeolivi
+      # PAT with repo:read on the org. GITHUB_TOKEN cannot read sibling repos.
+      GH_TOKEN: ${{ secrets.AUDIT_ADOPTION_TOKEN }}
+    steps:
+      - name: Build adoption report
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          {
+            echo "# oli-devops adoption audit — $(date -u +%Y-%m-%d)"
+            echo
+            echo "| Repo | pre-commit | reusable workflow | status |"
+            echo "|---|---|---|---|"
+          } > out/report.md
+
+          gh repo list "$ORG" --limit 200 --no-archived \
+            --json name --jq '.[] | select(.name | startswith("oli-")) | .name' \
+            | grep -vE '^(oli-devops|oli-platform)$' \
+            > out/repos.txt
+
+          gaps=0
+          while IFS= read -r repo; do
+            pc="ko"
+            wf="ko"
+
+            if gh api "repos/$ORG/$repo/contents/.pre-commit-config.yaml" \
+                --jq '.content' 2>/dev/null \
+                | base64 -d 2>/dev/null \
+                | grep -q "devoliveiraeolivi/oli-devops"; then
+              pc="ok"
+            fi
+
+            paths=$(gh api "repos/$ORG/$repo/contents/.github/workflows" \
+                      --jq '.[].path' 2>/dev/null || true)
+            for p in $paths; do
+              if gh api "repos/$ORG/$repo/contents/$p" --jq '.content' 2>/dev/null \
+                  | base64 -d 2>/dev/null \
+                  | grep -q "devoliveiraeolivi/oli-devops/.github/workflows/security.yml"; then
+                wf="ok"
+                break
+              fi
+            done
+
+            if [ "$pc" = "ok" ] && [ "$wf" = "ok" ]; then
+              status=":green_circle:"
+            else
+              status=":red_circle:"
+              gaps=$((gaps + 1))
+            fi
+
+            echo "| $repo | $pc | $wf | $status |" >> out/report.md
+          done < out/repos.txt
+
+          {
+            echo
+            echo "**Gaps:** $gaps"
+          } >> out/report.md
+
+          cat out/report.md >> "$GITHUB_STEP_SUMMARY"
+          echo "GAPS=$gaps" >> "$GITHUB_ENV"
+
+      - name: Upsert tracking issue when gaps exist
+        if: env.GAPS != '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          body=$(cat out/report.md)
+          existing=$(gh issue list --repo "$ORG/oli-devops" \
+            --label adoption-audit --state open \
+            --json number --jq '.[0].number // empty')
+
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --repo "$ORG/oli-devops" --body "$body"
+          else
+            gh issue create --repo "$ORG/oli-devops" \
+              --title "adoption audit: $GAPS repo(s) missing baseline" \
+              --label adoption-audit \
+              --body "$body"
+          fi
