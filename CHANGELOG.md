@@ -23,6 +23,17 @@ follows strict [SemVer](policies/SEMVER.md).
 - **`.github/workflows/audit-adoption.yml`**: weekly audit workflow that opens/
   updates a GitHub issue listing adoption gaps across the org.
 
+### Fixed
+
+- **Node.js 24 migration** (`security.yml`, `self-test.yml`): bumped all actions
+  to versions that run on Node.js 24 — required before GitHub's forced migration
+  on 2026-06-02 (`actions/checkout@v6`, `actions/setup-python@v6`,
+  `docker/setup-buildx-action@v4`, `aquasecurity/trivy-action@0.36.0`).
+  Consumer repos pinned to `@v1.0.0` should upgrade to `@v1.1.0` to eliminate
+  the deprecation warnings.
+- **`trivy-action` tag format** (`security.yml`): corrected invalid tag `0.36.0`
+  to `v0.36.0`.
+
 ### Migration
 
 No breaking changes. Existing consumers pinned to `v1.0.0` are unaffected.
