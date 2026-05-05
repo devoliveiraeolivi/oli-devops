@@ -26,6 +26,7 @@ Updated as part of each onboarding PR (Step 11 of ONBOARDING.md).
 | psico-sage | js-docker | no CI yet |
 | aasp-publicacoes | docker-only | new profile needed |
 | serpro-api | docker-only | new profile needed |
+| oli-monitor | gitleaks-only (ad-hoc) | compose/pre-built stack — no buildable image, no lang manifest; only gitleaks applies |
 
 ## Phase 3+ (backlog)
 
@@ -33,8 +34,7 @@ Python-only repos (no Docker): anp-bi-etl, oli-agent, oli-distribuidoras,
 oli-juris. Profile `python-only` now available (v1.1.0) — see Phase 1 above
 for oli-vault onboarding.
 
-Inactive/TBD: salesforce-etl, oli-monitor, oli-prazos, oli-llm, aasp-apex,
-split-pdf.
+Inactive/TBD: salesforce-etl, oli-prazos, oli-llm, aasp-apex, split-pdf.
 
 ## Legend
 
