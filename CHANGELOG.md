@@ -6,6 +6,19 @@ follows strict [SemVer](policies/SEMVER.md).
 
 ## [Unreleased]
 
+## [v1.1.1] — 2026-05-08
+
+### Fixed
+
+- **`security.yml` reusable workflow**: granted `pull-requests: read` to the
+  workflow's `permissions:` block. Without it, `gitleaks-action@v2` failed
+  with HTTP 403 on `pull_request` events (it lists PR commits via
+  `GET /repos/{owner}/{repo}/pulls/{n}/commits`, which requires
+  `pull-requests: read`). Discovered on `oli-etl` PR #4.
+- **`security.yml` comment**: corrected misleading comment that claimed callers
+  could elevate the workflow's permissions. The `permissions:` block of a
+  reusable workflow is a hard cap — callers cannot extend it.
+
 ## [v1.1.0] — 2026-05-05
 
 ### Added
