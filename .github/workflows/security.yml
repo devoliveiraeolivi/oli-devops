@@ -24,11 +24,16 @@ on:
         type: number
         default: 0
 
-# Least-privilege default for the workflow. Consumers can grant more
-# at the caller site (e.g. pull-requests: write if they want gitleaks
-# to post PR annotations). gitleaks-action@v2 only requires contents:read.
+# Least-privilege permissions for the reusable workflow.
+# Note: the `permissions:` block of a reusable workflow is a hard cap —
+# callers cannot elevate beyond what is declared here. Adding more would
+# require a new release.
+# - contents:read    — checkout
+# - pull-requests:read — gitleaks-action@v2 lists PR commits via
+#   GET /repos/{owner}/{repo}/pulls/{n}/commits on pull_request events.
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   trivy-image:
