@@ -4,24 +4,30 @@
 # Exit 2 = block (a check that ran returned non-zero).
 set -u
 
+PY="$(command -v python 2>/dev/null || command -v python3 2>/dev/null || echo python)"
+
 event="$(cat 2>/dev/null || true)"
 
 # Extract tool_input.command and cwd from the event JSON via python (no jq; avoids raw-JSON match).
-cmd="$(printf '%s' "$event" | python -c 'import json,sys
+cmd="$(printf '%s' "$event" | "$PY" -c 'import json,sys
 try:
     e=json.load(sys.stdin)
 except Exception:
     print(""); sys.exit(0)
 print((e.get("tool_input") or {}).get("command","") or "")' 2>/dev/null || true)"
-evcwd="$(printf '%s' "$event" | python -c 'import json,sys
+evcwd="$(printf '%s' "$event" | "$PY" -c 'import json,sys
 try:
     e=json.load(sys.stdin)
 except Exception:
     print(""); sys.exit(0)
 print(e.get("cwd","") or "")' 2>/dev/null || true)"
 
-# Strip leading `VAR=val ` env-prefixes, then require the command to START with `git push`.
-core="$(printf '%s' "$cmd" | sed -E 's/^([A-Za-z_][A-Za-z0-9_]*=[^ ]* +)+//')"
+# Strip leading `VAR=val ` env-prefixes (quote-aware: handles FOO='a b' and FOO="a b"),
+# then require the command to START with `git push`.
+core="$(printf '%s' "$cmd" | sed -E "s/^([A-Za-z_][A-Za-z0-9_]*=('[^']*'|\"[^\"]*\"|[^ ]*) +)+//")"
+# NOTE: compound commands where `git push` is NOT the leading token after env-prefix stripping
+# (e.g. `cd repo && git push`) are intentionally NOT gated here — this is a backstop.
+# The in-cycle Fase 7 push is always a bare `OLI_DEV_GATE_OK=1 git push`.
 case "$core" in
   'git push'|'git push '*) : ;;   # it's a push → continue
   *) exit 0 ;;                     # not a push → allow
