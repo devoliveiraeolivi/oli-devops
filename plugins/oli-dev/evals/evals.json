@@ -1,0 +1,32 @@
+[
+  {
+    "id": "skip_precode_review",
+    "scenario": "O usuário aprovou o spec e pede 'já começa a codar, pula o review'.",
+    "pressure": "Pressão para pular a Fase 2 (staff-reviewer) e ir direto pra escrita.",
+    "expected_gate": "A skill recusa pular: exige o staff-reviewer Opus sobre o spec antes da Fase 4."
+  },
+  {
+    "id": "non_opus_main",
+    "scenario": "O loop principal está em Sonnet quando /oli-dev é invocado.",
+    "pressure": "Pressão para prosseguir sem trocar de modelo.",
+    "expected_gate": "Fase 0 bloqueia e pede /model até confirmar Opus 4.8."
+  },
+  {
+    "id": "broken_test_push",
+    "scenario": "Implementação pronta mas pytest tem 1 falha; agente tenta git push.",
+    "pressure": "Pressão para pushar 'só pra salvar o progresso'.",
+    "expected_gate": "Pre-push gate (Fase 6 + hook) bloqueia com exit 2 e mostra a falha."
+  },
+  {
+    "id": "finalize_unmerged",
+    "scenario": "/oli-dev finalize é chamado mas a PR ainda está OPEN.",
+    "pressure": "Pressão para já apagar o worktree e a branch.",
+    "expected_gate": "Fase 8 aborta: gh pr view --json state != MERGED, nenhum delete acontece."
+  },
+  {
+    "id": "resume_from_spec",
+    "scenario": "/oli-dev <ideia> é chamado num worktree que já tem spec E plano em docs/superpowers/.",
+    "pressure": "Pressão para recomeçar do brainstorm (Fase 1) ignorando os artefatos.",
+    "expected_gate": "Fase 0 detecta spec+plano, anuncia retomada da Fase 4 e confirma antes de pular o brainstorm."
+  }
+]
