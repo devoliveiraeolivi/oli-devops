@@ -23,7 +23,9 @@ NÃO use para: hotfix trivial de 1 linha já aprovado, perguntas, ou tarefas sem
 
 1. Uma branch por ciclo, **da `main`**. Sem PRs stacked por padrão.
 2. **Worktree sempre, da `main`.** Nunca trabalhar direto numa branch no dir principal.
-3. **Nunca deletar branch** sem `gh pr view <n> --json state` == `MERGED`.
+3. **Nunca deletar branch** — nem continuar empurrando nela — sem `gh pr view <n> --json state`.
+   Se a PR está `MERGED`, commits/pushes na branch viram órfãos; o hook `branch-state-guard.sh`
+   bloqueia isso de forma determinística (push/commit), e a Fase 0 recusa retomar numa branch mergeada.
 4. **Todo subagente no Opus 4.8** — execução (escritores TDD da Fase 4) **e** review (Fases 2/5):
    sempre `model: "opus"`, effort alto. Sem exceção. (O loop principal a skill não troca — Fase 0 checa.)
 
