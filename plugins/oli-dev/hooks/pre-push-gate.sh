@@ -34,8 +34,9 @@ case "$core" in
 esac
 
 # In-cycle marker: Fase 7 pushes with `OLI_DEV_GATE_OK=1 git push` (gate already ran in Fase 6).
+# Anchored to a LEADING env-prefix so a stray branch name like `feat-OLI_DEV_GATE_OK=1` can't bypass.
 case "$cmd" in
-  *OLI_DEV_GATE_OK=1*) exit 0 ;;
+  OLI_DEV_GATE_OK=1\ *) exit 0 ;;
 esac
 
 # Resolve the repo dir from the EVENT cwd (correct inside worktrees), not CLAUDE_PROJECT_DIR.

@@ -1,4 +1,3 @@
-<!-- plugins/oli-dev/commands/oli-dev.md -->
 ---
 name: oli-dev
 description: Roda o ciclo de desenvolvimento OLI (worktree → brainstorm → review → plano → escrita TDD → review → pre-push → PR). Use `/oli-dev <ideia>` para iniciar o ciclo, ou `/oli-dev finalize` para a limpeza pós-merge.
