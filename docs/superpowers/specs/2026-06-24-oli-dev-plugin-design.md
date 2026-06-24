@@ -132,15 +132,30 @@ que um spec velho está aprovado). Isso torna o ciclo resiliente a interrupçõe
 A skill mantém uma checklist (um todo por fase). Modo `<ideia>` executa fases 0–7; modo
 `finalize` executa fase 8.
 
+### Princípios de processo (lições de sessões anteriores — invioláveis)
+
+Estes princípios são **gates duros** que atravessam todas as fases. Vêm de erros reais já cometidos:
+
+1. **Uma branch por ciclo, sempre saindo da `main` atualizada.** **Sem PRs stacked por padrão.**
+   (Aprendido com o PR #254, que caiu dentro de `fix` por ser stacked.) Se o stacking for
+   inevitável, vale a regra de re-apontar a base — mas o **default é uma branch da main**.
+2. **Worktree sempre, criado a partir da `main`** (nunca do dir principal numa branch, nunca de
+   outra feature branch).
+3. **Nunca deletar branch sem `gh pr view <n> --json state`** confirmando `MERGED`.
+   (Aprendido com a branch do #257, deletada com a PR ainda aberta — precisou recovery via `refs/pull`.)
+4. **Todo review roda no Opus 4.8** — staff-reviewer (Fase 2), code-review/simplify/security
+   (Fase 5): subagentes sempre com `model: "opus"`, effort alto. Sem exceção.
+
 ### Fase 0 — SETUP gate
 
 1. **Modelo:** verifica se o loop principal está em Opus 4.8. Como skill é markdown e não troca
    o modelo da sessão, se não estiver em Opus 4.8 a skill **bloqueia** e instrui o usuário a
    rodar `/model` (ou `/fast` no Opus). Não prossegue sem confirmação.
 2. **Dependências:** confirma que as skills do superpowers necessárias estão disponíveis.
-3. **Worktree:** via `superpowers:using-git-worktrees`, cria `.worktrees/<feat>` **dentro do
-   repo alvo** em branch `feat/<feat>` (nunca pasta irmã; garante `.worktrees/` no `.gitignore`).
-   Todo o trabalho subsequente acontece nesse worktree.
+3. **Worktree:** via `superpowers:using-git-worktrees`, primeiro `git fetch` + garante `main`
+   atualizada, então cria `.worktrees/<feat>` **dentro do repo alvo**, em branch `feat/<feat>`
+   **criada a partir da `main`** (nunca pasta irmã; nunca de outra feature branch; garante
+   `.worktrees/` no `.gitignore`). Todo o trabalho subsequente acontece nesse worktree.
 
 ### Fase 1 — BRAINSTORM
 
@@ -172,7 +187,8 @@ estado compartilhado. Isola conflitos de escrita com worktrees por subagente qua
 
 ### Fase 5 — REVIEW GATE (pós-código)
 
-Encadeia, em ordem, cada um com propósito distinto:
+Encadeia, em ordem, cada um com propósito distinto (todos os subagentes de review em **Opus 4.8**,
+Princípio 4):
 
 1. **`/code-review`** (effort alto) — bugs de correção. Achados verificados adversarialmente.
 2. **`/simplify`** — reuso, simplificação, eficiência, altitude (qualidade, não bugs).
@@ -199,8 +215,10 @@ Exige **evidência de saída** (verification-before-completion). **Bloqueia** se
 ### Fase 7 — PUSH + PR
 
 Invoca `commit-commands:commit-push-pr`. Título curto (<70), corpo com `## Summary` e `## Test plan`.
-**Aviso de PR stacked:** se a branch foi criada sobre outra branch (base != main), a skill registra
-no corpo da PR a nota de "re-apontar base antes de mergear a anterior" (regra do CLAUDE.md global).
+**Base = `main` (default inviolável):** a PR sai contra `main` — uma branch por ciclo, sem stacking
+(Princípio 1). Se o usuário **explicitamente** exigir uma PR stacked, a skill avisa do risco e
+registra no corpo da PR a nota de "re-apontar a base para `main` antes de mergear a anterior"
+(regra do CLAUDE.md global) — mas isso é exceção, não o caminho normal.
 O ciclo `<ideia>` **termina aqui** — em "PR aberta". Não trava esperando merge humano.
 
 ### Fase 8 — CLOSE-OUT + limpeza pós-merge (`/oli-dev finalize`)
@@ -218,8 +236,9 @@ Invocação separada, rodada **depois** que a PR foi mergeada. Ordem:
    pode falhar com "Invalid argument" — nesse caso remover o link primeiro (`rm .worktrees/<feat>/node_modules`),
    depois `rm -rf .worktrees/<feat>`, e `git worktree prune`. Conferir que o `node_modules` real do repo
    continua intacto (regra do CLAUDE.md global).
-5. **Deleta branches:** branch local mergeada (`git branch -d`) + `commit-commands:clean_gone` para
-   limpar branches `[gone]` (deletadas no remote).
+5. **Deleta branches (só após o check do passo 1):** nunca deletar sem o `gh pr view --json state ==
+   MERGED` (Princípio 3). Branch local mergeada via `git branch -d` (nunca `-D` forçado) +
+   `commit-commands:clean_gone` para limpar branches `[gone]` (já deletadas no remote pós-merge).
 6. **Log institucional:** registra o trabalho em `docs/project_notes/issues.md` do repo alvo;
    adiciona a `bugs.md`/`decisions.md` quando aplicável (sistema de memória institucional do projeto).
 7. **Auto-memória:** atualiza a memória do Claude (`~/.claude/.../memory/`) com fatos **não-óbvios**
