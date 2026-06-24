@@ -36,9 +36,15 @@ como segundo hook PreToolUse/`Bash`. Mais um reforço de orientação na Fase 0 
 Fluxo:
 
 1. Parse `tool_input.command` e `cwd` do JSON (reusa o padrão python do pre-push-gate).
-2. Strip de env-prefixes `VAR=val ` (sed quote-aware). O comando "core" precisa **começar**
-   com `git push` ou `git commit` (`git push`, `git push …`, `git commit`, `git commit …`).
-   Qualquer outra coisa → `exit 0`.
+2. Detecta `git push`/`git commit` como **comando**, inclusive em compostos. Quebra o comando
+   por separadores (`&&`, `||`, `;`, `|`, newline) e, em cada segmento, tira espaço à esquerda +
+   env-prefixes `VAR=val ` (sed quote-aware) antes de casar o token líder
+   (`git push`, `git push …`, `git commit`, `git commit …`). Se **qualquer** segmento casar →
+   gated; senão → `exit 0`. Isso fecha o furo `cd <dir> && git push` (padrão comum no fluxo de
+   worktree), diferente do `pre-push-gate.sh` que só olha o token líder (lá é um backstop com o
+   marcador `OLI_DEV_GATE_OK=1`; aqui o anti-órfão precisa pegar o composto).
+   **Limitação conhecida:** um `git push`/`git commit` que comece um segmento **dentro de aspas**
+   (ex: `echo "… && git push x"`) pode dar falso-positivo — raro, e só bloqueia em branch MERGED.
 3. Resolve `dir`: `OLI_DEV_GUARD_DIR` se setado; senão `git -C <evcwd> rev-parse --show-toplevel`.
 4. Branch atual: `OLI_DEV_GUARD_BRANCH` se setado; senão `git -C "$dir" branch --show-current`.
    Se branch for `main`/`master`/vazia → `exit 0` (libera; main não gera órfão de feature).
@@ -147,6 +153,11 @@ Espelha `test_pre_push_gate.sh` (helper `gate_rc` + `check`, sem `set -e`). Caso
 14. `OLI_DEV_GUARD_DISABLE=1` em push numa branch MERGED → `0` (kill switch).
 15. Aviso de worktree: `OLI_DEV_GUARD_IN_WORKTREE=0` + feature branch + PR OPEN → `0`
     (libera, mas emite aviso no stderr — verificar a string no stderr, não só o rc).
+16. Composto `cd <dir> && git push` em branch MERGED → `2` (matching por segmento).
+17. Composto `cd <dir> && git commit -m x` em branch MERGED → `2`.
+18. Composto com `;`: `git add . ; git commit -m x` em branch MERGED → `2`.
+19. Sem falso-positivo: `echo git push` (token líder = `echo`, sem separador) → `0`.
+20. Composto `cd <dir> && git push` em branch OPEN → `0` (gated, mas liberado pelo estado).
 
 Registrado em `tests/run_all.sh`. Critério: `run_all.sh` ALL GREEN.
 

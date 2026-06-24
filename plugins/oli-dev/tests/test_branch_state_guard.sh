@@ -46,6 +46,16 @@ check "$(gate_rc '{"tool_input":{"command":"git push"}}' OLI_DEV_GUARD_DISABLE=1
 # 15. Worktree warning: main checkout + feature branch → 0 + stderr warning
 check "$(gate_rc '{"tool_input":{"command":"git push"}}' OLI_DEV_GUARD_IN_WORKTREE=0 OLI_DEV_GUARD_BRANCH=feat/x OLI_DEV_GUARD_GH_CMD='echo OPEN')" 0 "worktree warning does not block"
 checkc "$(gate_err '{"tool_input":{"command":"git push"}}' OLI_DEV_GUARD_IN_WORKTREE=0 OLI_DEV_GUARD_BRANCH=feat/x OLI_DEV_GUARD_GH_CMD='echo OPEN')" "worktree" "worktree warning emitted on main checkout"
+# 16. Compound command: `cd <dir> && git push` on MERGED branch → 2 (segment matching)
+check "$(gate_rc '{"tool_input":{"command":"cd /repo && git push"}}' OLI_DEV_GUARD_BRANCH=feat/x OLI_DEV_GUARD_GH_CMD='echo MERGED')" 2 "cd && git push is gated"
+# 17. Compound command: `cd <dir> && git commit -m x` on MERGED branch → 2
+check "$(gate_rc '{"tool_input":{"command":"cd /repo && git commit -m x"}}' OLI_DEV_GUARD_BRANCH=feat/x OLI_DEV_GUARD_GH_CMD='echo MERGED')" 2 "cd && git commit is gated"
+# 18. Compound command with ; separator: `git add . ; git commit -m x` on MERGED → 2
+check "$(gate_rc '{"tool_input":{"command":"git add . ; git commit -m x"}}' OLI_DEV_GUARD_BRANCH=feat/x OLI_DEV_GUARD_GH_CMD='echo MERGED')" 2 "git add ; git commit is gated"
+# 19. No false positive: leading `echo` mentioning push, no separator → 0
+check "$(gate_rc '{"tool_input":{"command":"echo git push"}}' OLI_DEV_GUARD_BRANCH=feat/x OLI_DEV_GUARD_GH_CMD='echo MERGED')" 0 "leading echo of git push is not gated"
+# 20. Compound command but push is on OPEN branch → 0 (gated then allowed by state)
+check "$(gate_rc '{"tool_input":{"command":"cd /repo && git push"}}' OLI_DEV_GUARD_BRANCH=feat/x OLI_DEV_GUARD_GH_CMD='echo OPEN')" 0 "cd && git push on OPEN passes"
 
 echo "branch_state_guard: $pass passed, $fail failed"
 [ "$fail" -eq 0 ] || exit 1

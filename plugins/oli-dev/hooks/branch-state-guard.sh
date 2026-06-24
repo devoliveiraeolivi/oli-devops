@@ -25,11 +25,20 @@ except Exception:
     print(""); sys.exit(0)
 print(e.get("cwd","") or "")' 2>/dev/null || true)"
 
-# Strip de env-prefixes VAR=val (quote-aware), depois exige git push/commit como token líder.
-core="$(printf '%s' "$cmd" | sed -E "s/^([A-Za-z_][A-Za-z0-9_]*=('[^']*'|\"[^\"]*\"|[^ ]*) +)+//")"
-case "$core" in
-  'git push'|'git push '*|'git commit'|'git commit '*) : ;;  # gated → continua
-  *) exit 0 ;;                                                # não é push/commit → libera
+# Detecta `git push`/`git commit` como comando — inclusive em compostos (`cd x && git push`,
+# `git add . ; git commit`). Quebra por separadores de comando (&& || ; |, newline) e, em cada
+# segmento, tira espaço à esquerda + env-prefixes VAR=val (quote-aware) antes de casar o token líder.
+# Limitação conhecida: um `git push`/`git commit` que comece um segmento DENTRO de aspas
+# (ex: `echo "... && git push x"`) pode dar falso-positivo — raro, e só bloqueia em branch MERGED.
+gated="$(printf '%s\n' "$cmd" | sed -E 's/&&/\n/g; s/\|\|/\n/g; s/;/\n/g; s/\|/\n/g' | while IFS= read -r seg; do
+  seg="$(printf '%s' "$seg" | sed -E "s/^[[:space:]]+//; s/^([A-Za-z_][A-Za-z0-9_]*=('[^']*'|\"[^\"]*\"|[^ ]*) +)+//")"
+  case "$seg" in
+    'git push'|'git push '*|'git commit'|'git commit '*) echo yes ;;
+  esac
+done)"
+case "$gated" in
+  *yes*) : ;;       # é push/commit (talvez em comando composto) → continua
+  *) exit 0 ;;      # não é push/commit → libera
 esac
 
 # Resolve o dir do repo a partir do cwd do EVENTO (correto dentro de worktrees).
