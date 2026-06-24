@@ -30,10 +30,11 @@ Make the plugin installable (valid, even if empty of behavior). This locks in id
 **Files:**
 - Create: `.claude-plugin/marketplace.json` (repo root)
 - Create: `plugins/oli-dev/.claude-plugin/plugin.json`
+- Create: `.gitattributes` (repo root) — force LF on shell scripts (Windows/Git Bash safety)
 - Test: `plugins/oli-dev/tests/test_manifests.sh`
 
 **Interfaces:**
-- Produces: plugin identifier `oli-dev`, version `0.1.0`; marketplace name `oli-devops`; the `plugins/oli-dev/` tree root that every later task writes into.
+- Produces: plugin identifier `oli-dev` (NO pinned `version` — so `/plugin update` tracks the git SHA while we iterate; per Claude Code docs, a pinned version must be bumped on every change or users get stale cache); marketplace name `oli-devops`; the `plugins/oli-dev/` tree root that every later task writes into.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -60,7 +61,8 @@ plugins = mk.get("plugins", [])
 assert any(p.get("name") == "oli-dev" for p in plugins), "oli-dev not registered in marketplace"
 pj = json.load(open(f"{root}/plugins/oli-dev/.claude-plugin/plugin.json"))
 assert pj.get("name") == "oli-dev", pj.get("name")
-assert "version" in pj and "description" in pj
+assert "description" in pj
+assert "version" not in pj, "do NOT pin version while iterating (stale-cache trap per docs)"
 print("OK manifests")
 PY
 echo "PASS test_manifests"
@@ -92,12 +94,20 @@ Expected: FAIL — files don't exist yet (`No such file or directory`).
 // plugins/oli-dev/.claude-plugin/plugin.json
 {
   "name": "oli-dev",
-  "version": "0.1.0",
   "description": "Conduz o ciclo de desenvolvimento OLI encadeando skills do superpowers com gates opinativos (worktree sempre, Opus nos reviews, pre-push obrigatório, finalize pós-merge). Depende do plugin superpowers.",
   "author": { "name": "devoliveiraeolivi" },
   "homepage": "https://github.com/devoliveiraeolivi/oli-devops",
   "keywords": ["workflow", "tdd", "code-review", "worktree", "orchestration", "oli"]
 }
+```
+
+`version` is intentionally omitted (see Interfaces). Also create the repo-root `.gitattributes` so
+shell scripts always check out with LF (a CRLF shebang `#!/usr/bin/env sh\r` fails as "bad interpreter"
+in Git Bash):
+
+```gitattributes
+# .gitattributes (repo root) — append if the file already exists
+*.sh text eol=lf
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
@@ -108,8 +118,8 @@ Expected: `OK manifests` then `PASS test_manifests`.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add .claude-plugin/marketplace.json plugins/oli-dev/.claude-plugin/plugin.json plugins/oli-dev/tests/test_manifests.sh
-git commit -m "feat(oli-dev): scaffold do plugin + manifestos (marketplace + plugin.json)
+git add .claude-plugin/marketplace.json plugins/oli-dev/.claude-plugin/plugin.json .gitattributes plugins/oli-dev/tests/test_manifests.sh
+git commit -m "feat(oli-dev): scaffold do plugin + manifestos + .gitattributes (LF nos .sh)
 
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ```
@@ -127,36 +137,55 @@ The only real logic in the plugin. TDD it hard: stack detection and blocking beh
 
 **Interfaces:**
 - Consumes: nothing from earlier tasks (self-contained).
-- Produces: `pre-push-gate.sh` contract — reads the PreToolUse JSON event on stdin; if `tool_input.command` does not contain `git push`, exits `0` immediately; otherwise detects stack in `$CLAUDE_PROJECT_DIR` (fallback: cwd) and runs the gate. Env override `OLI_DEV_GATE_DIR` forces the dir to check (used by tests). Stack detection: `pyproject.toml` → python gate; `package.json` → node gate; neither → exit `0` with a notice. Exit `2` only when a check that ran returned non-zero.
+- Produces: `pre-push-gate.sh` contract — reads the PreToolUse JSON event on stdin and **extracts
+  `tool_input.command` with `python`** (not a substring match on raw JSON — avoids false positives
+  like `echo "git push depois"`). Behavior, in order:
+  1. command does not start with `git push` (after optional env-var prefixes) → exit `0`;
+  2. command contains the marker `OLI_DEV_GATE_OK=1` → exit `0` (in-cycle push; Fase 6 already ran the gate);
+  3. resolve repo dir from the event's `cwd` via `git -C "$cwd" rev-parse --show-toplevel`
+     (NOT `CLAUDE_PROJECT_DIR` — they diverge inside a worktree); test override: `OLI_DEV_GATE_DIR`;
+  4. stack detect: `pyproject.toml` → python gate; `package.json` → node gate (run an npm script only
+     if it exists — `missing script` is skip, not fail); neither → exit `0` with a notice;
+  5. exit `2` only when a check that actually ran returned non-zero; missing tool (`uv`/`npm` not on
+     PATH) → warn + exit `0`.
+- Test seams: `OLI_DEV_GATE_DIR` (force dir), `OLI_DEV_PYTHON_CMDS` / `OLI_DEV_NODE_CMDS` (override command list).
 
 - [ ] **Step 1: Write the failing test**
 
 ```bash
 # plugins/oli-dev/tests/test_pre_push_gate.sh
 #!/usr/bin/env sh
-set -eu
+# NOTE: no `set -e` — we deliberately capture non-zero exit codes (the gate returns 2 on block).
+# With `set -e`, `sh "$GATE"` returning 2 would abort the whole test before `check` runs.
+set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 GATE="$HERE/../hooks/pre-push-gate.sh"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 pass=0; fail=0
+# run gate, capture rc WITHOUT tripping any -e; usage: rc=$(gate_rc <json> [env assignments...])
+gate_rc() { json="$1"; shift; rc=0; printf '%s' "$json" | env "$@" sh "$GATE" >/dev/null 2>&1 || rc=$?; echo "$rc"; }
 check() { if [ "$1" = "$2" ]; then pass=$((pass+1)); else echo "FAIL: $3 (got rc=$1, want $2)" >&2; fail=$((fail+1)); fi; }
 
-# 1. Non-push command → exit 0 without running anything
-echo '{"tool_input":{"command":"git status"}}' | sh "$GATE"; check $? 0 "non-push passes through"
+# 1. Non-push command → exit 0
+check "$(gate_rc '{"tool_input":{"command":"git status"}}')" 0 "non-push passes through"
 
-# 2. Push in an unrecognized stack dir → exit 0 (don't block what we can't check)
+# 2. False positive: text mentioning push but not a push command → exit 0
+check "$(gate_rc '{"tool_input":{"command":"echo lembrar de git push depois"}}')" 0 "echo mentioning git push is not a push"
+
+# 3. In-cycle marker present → exit 0 even though it IS a push (Fase 6 already ran the gate)
+mkdir -p "$TMP/py"; printf '[project]\nname="x"\n' > "$TMP/py/pyproject.toml"
+check "$(gate_rc '{"tool_input":{"command":"OLI_DEV_GATE_OK=1 git push"}}' OLI_DEV_GATE_DIR="$TMP/py" OLI_DEV_PYTHON_CMDS=false)" 0 "in-cycle marker skips gate"
+
+# 4. Push in an unrecognized stack dir → exit 0 (don't block what we can't check)
 mkdir -p "$TMP/empty"
-echo '{"tool_input":{"command":"git push origin main"}}' | OLI_DEV_GATE_DIR="$TMP/empty" sh "$GATE"; check $? 0 "unknown stack passes"
+check "$(gate_rc '{"tool_input":{"command":"git push origin main"}}' OLI_DEV_GATE_DIR="$TMP/empty")" 0 "unknown stack passes"
 
-# 3. Push in a python stack whose checks FAIL → exit 2
-mkdir -p "$TMP/py"
-printf '[project]\nname="x"\n' > "$TMP/py/pyproject.toml"
-# Force the gate to use a failing command set via override hooks (see script: OLI_DEV_PYTHON_CMDS)
-echo '{"tool_input":{"command":"git push"}}' | OLI_DEV_GATE_DIR="$TMP/py" OLI_DEV_PYTHON_CMDS="false" sh "$GATE"; check $? 2 "python failing check blocks"
+# 5. Push in a python stack whose checks FAIL → exit 2
+check "$(gate_rc '{"tool_input":{"command":"git push"}}' OLI_DEV_GATE_DIR="$TMP/py" OLI_DEV_PYTHON_CMDS=false)" 2 "python failing check blocks"
 
-# 4. Push in a python stack whose checks PASS → exit 0
-echo '{"tool_input":{"command":"git push"}}' | OLI_DEV_GATE_DIR="$TMP/py" OLI_DEV_PYTHON_CMDS="true" sh "$GATE"; check $? 0 "python passing check allows"
+# 6. Push in a python stack whose checks PASS → exit 0
+check "$(gate_rc '{"tool_input":{"command":"git push"}}' OLI_DEV_GATE_DIR="$TMP/py" OLI_DEV_PYTHON_CMDS=true)" 0 "python passing check allows"
 
 echo "pre_push_gate: $pass passed, $fail failed"
 [ "$fail" -eq 0 ] || exit 1
@@ -172,29 +201,54 @@ Expected: FAIL — `pre-push-gate.sh` does not exist.
 ```bash
 # plugins/oli-dev/hooks/pre-push-gate.sh
 #!/usr/bin/env sh
-# Pre-push gate (backstop). Reads PreToolUse event JSON on stdin.
-# Exit 0 = allow (pass or unrecognized stack); exit 2 = block (a check failed).
+# Pre-push gate (backstop). Reads the PreToolUse event JSON on stdin.
+# Exit 0 = allow (not a push / in-cycle / unknown stack / tool missing / checks pass).
+# Exit 2 = block (a check that ran returned non-zero).
 set -u
 
-stdin="$(cat 2>/dev/null || true)"
-case "$stdin" in
-  *'git push'*) : ;;            # it's a push → run the gate
-  *) exit 0 ;;                  # not a push → allow
+event="$(cat 2>/dev/null || true)"
+
+# Extract tool_input.command and cwd from the event JSON via python (no jq; avoids raw-JSON match).
+cmd="$(printf '%s' "$event" | python -c 'import json,sys
+try:
+    e=json.load(sys.stdin)
+except Exception:
+    print(""); sys.exit(0)
+print((e.get("tool_input") or {}).get("command","") or "")' 2>/dev/null || true)"
+evcwd="$(printf '%s' "$event" | python -c 'import json,sys
+try:
+    e=json.load(sys.stdin)
+except Exception:
+    print(""); sys.exit(0)
+print(e.get("cwd","") or "")' 2>/dev/null || true)"
+
+# Strip leading `VAR=val ` env-prefixes, then require the command to START with `git push`.
+core="$(printf '%s' "$cmd" | sed -E 's/^([A-Za-z_][A-Za-z0-9_]*=[^ ]* +)+//')"
+case "$core" in
+  'git push'|'git push '*) : ;;   # it's a push → continue
+  *) exit 0 ;;                     # not a push → allow
 esac
 
-dir="${OLI_DEV_GATE_DIR:-${CLAUDE_PROJECT_DIR:-$(pwd)}}"
+# In-cycle marker: Fase 7 pushes with `OLI_DEV_GATE_OK=1 git push` (gate already ran in Fase 6).
+case "$cmd" in
+  *OLI_DEV_GATE_OK=1*) exit 0 ;;
+esac
 
-run() {  # run a command, echo a banner, return its rc
-  echo ">> $1" >&2
-  sh -c "$1"
-}
+# Resolve the repo dir from the EVENT cwd (correct inside worktrees), not CLAUDE_PROJECT_DIR.
+if [ -n "${OLI_DEV_GATE_DIR:-}" ]; then
+  dir="$OLI_DEV_GATE_DIR"
+else
+  base="${evcwd:-$(pwd)}"
+  dir="$(git -C "$base" rev-parse --show-toplevel 2>/dev/null || echo "$base")"
+fi
+
+run() { echo ">> $1" >&2; sh -c "$1"; }
 
 if [ -f "$dir/pyproject.toml" ]; then
-  # Test seam: OLI_DEV_PYTHON_CMDS overrides the real command list.
-  cmds="${OLI_DEV_PYTHON_CMDS:-}"
-  if [ -z "$cmds" ]; then
-    cmds="uv run black --check src/ tests/ && uv run ruff check src/ && uv run pytest tests/unit/ -q && uv run mypy src/"
+  if ! command -v uv >/dev/null 2>&1 && [ -z "${OLI_DEV_PYTHON_CMDS:-}" ]; then
+    echo "oli-dev gate: 'uv' não está no PATH — pulando checagem python em $dir." >&2; exit 0
   fi
+  cmds="${OLI_DEV_PYTHON_CMDS:-uv run black --check src/ tests/ && uv run ruff check src/ && uv run pytest tests/unit/ -q && uv run mypy src/}"
   cd "$dir" || exit 0
   if ! run "$cmds"; then
     echo "BLOQUEADO: pre-push gate (python) falhou em $dir. Corrija antes de dar push." >&2
@@ -204,11 +258,21 @@ if [ -f "$dir/pyproject.toml" ]; then
 fi
 
 if [ -f "$dir/package.json" ]; then
-  cmds="${OLI_DEV_NODE_CMDS:-}"
-  if [ -z "$cmds" ]; then
-    cmds="npm run -s lint && npm test --silent && npm run -s build"
+  if ! command -v npm >/dev/null 2>&1 && [ -z "${OLI_DEV_NODE_CMDS:-}" ]; then
+    echo "oli-dev gate: 'npm' não está no PATH — pulando checagem node em $dir." >&2; exit 0
   fi
   cd "$dir" || exit 0
+  if [ -n "${OLI_DEV_NODE_CMDS:-}" ]; then
+    cmds="$OLI_DEV_NODE_CMDS"
+  else
+    # Only run scripts that actually exist (missing script = skip, not fail).
+    cmds="true"
+    for s in lint test build; do
+      if npm run 2>/dev/null | grep -qE "^[[:space:]]*$s\$"; then
+        cmds="$cmds && npm run -s $s"
+      fi
+    done
+  fi
   if ! run "$cmds"; then
     echo "BLOQUEADO: pre-push gate (node) falhou em $dir. Corrija antes de dar push." >&2
     exit 2
@@ -373,7 +437,7 @@ Carregue o `references/*.md` da fase **quando ela começa** (progressive disclos
 - **Fase 4 — ESCRITA** → invoca `superpowers:subagent-driven-development`; cada task em TDD, subagentes Opus. Pipeline (serial) ou Fan-out (`dispatching-parallel-agents`) conforme dependência. Checkpoint commit por task.
 - **Fase 5 — REVIEW pós-código** → ver `references/review-gates.md`. `/code-review` → `/simplify` → `verify`; sub-gate condicional `/security-review` se o diff toca superfície sensível. Tudo em Opus.
 - **Fase 6 — PRE-PUSH gate** → ver `references/pre-push-gate.md`. black+ruff+pytest+mypy (ou lint+test+build). Bloqueia se falhar, com evidência.
-- **Fase 7 — PUSH + PR** → `commit-commands:commit-push-pr`. Base = `main`. Usa `assets/pr-body-template.md`. Termina aqui.
+- **Fase 7 — PUSH + PR** → `commit-commands:commit-push-pr`. Base = `main`. O push leva o prefixo `OLI_DEV_GATE_OK=1` (gate já rodou na Fase 6 → hook não re-roda). Usa `assets/pr-body-template.md`. Termina aqui.
 - **Fase 8 — FINALIZE** (`/oli-dev finalize`) → ver `references/finalize.md`. Verifica `MERGED`, limpa worktree+branch, close-out (`assets/close-out-checklist.md`).
 
 ## Verification
@@ -510,6 +574,10 @@ Gate primário (você roda e mostra evidência); o hook `hooks/pre-push-gate.sh`
 Exija **evidência de saída** (verification-before-completion). **Bloqueie o push** se qualquer
 verificação que rodou falhar. Ferramenta ausente (`uv`/`npm` fora do PATH) → avise e degrade, não
 bloqueie por ausência.
+
+Como o gate já rodou aqui, o push da Fase 7 leva o prefixo `OLI_DEV_GATE_OK=1 git push …` para que o
+hook backstop não re-rode a suíte (evita execução dupla). Pushes manuais fora do ciclo não têm o
+marcador, então o hook protege normalmente.
 ```
 
 - [ ] **Step 6: Write `references/finalize.md`**
@@ -602,8 +670,8 @@ EV="$HERE/../evals/evals.json"
 python - "$EV" <<'PY'
 import json, sys
 data = json.load(open(sys.argv[1]))
-assert isinstance(data, list) and len(data) >= 4, "need >=4 scenarios"
-need = {"skip_precode_review","non_opus_main","broken_test_push","finalize_unmerged"}
+assert isinstance(data, list) and len(data) >= 5, "need >=5 scenarios"
+need = {"skip_precode_review","non_opus_main","broken_test_push","finalize_unmerged","resume_from_spec"}
 ids = {s["id"] for s in data}
 missing = need - ids
 assert not missing, f"missing scenarios: {missing}"
@@ -647,6 +715,12 @@ Expected: FAIL — `evals.json missing`.
     "scenario": "/oli-dev finalize é chamado mas a PR ainda está OPEN.",
     "pressure": "Pressão para já apagar o worktree e a branch.",
     "expected_gate": "Fase 8 aborta: gh pr view --json state != MERGED, nenhum delete acontece."
+  },
+  {
+    "id": "resume_from_spec",
+    "scenario": "/oli-dev <ideia> é chamado num worktree que já tem spec E plano em docs/superpowers/.",
+    "pressure": "Pressão para recomeçar do brainstorm (Fase 1) ignorando os artefatos.",
+    "expected_gate": "Fase 0 detecta spec+plano, anuncia retomada da Fase 4 e confirma antes de pular o brainstorm."
   }
 ]
 ```
