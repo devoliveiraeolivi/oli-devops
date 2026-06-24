@@ -28,6 +28,9 @@ check "$(gate_rc '{"tool_input":{"command":"git push origin main"}}' OLI_DEV_GAT
 # 5. Push in a python stack whose checks FAIL → exit 2
 check "$(gate_rc '{"tool_input":{"command":"git push"}}' OLI_DEV_GATE_DIR="$TMP/py" OLI_DEV_PYTHON_CMDS=false)" 2 "python failing check blocks"
 
+# 5b. Env-prefixed push must still be gated (regression for quoted-value strip)
+check "$(gate_rc '{"tool_input":{"command":"FOO=bar git push"}}' OLI_DEV_GATE_DIR="$TMP/py" OLI_DEV_PYTHON_CMDS=false)" 2 "env-prefixed push is gated"
+
 # 6. Push in a python stack whose checks PASS → exit 0
 check "$(gate_rc '{"tool_input":{"command":"git push"}}' OLI_DEV_GATE_DIR="$TMP/py" OLI_DEV_PYTHON_CMDS=true)" 0 "python passing check allows"
 
