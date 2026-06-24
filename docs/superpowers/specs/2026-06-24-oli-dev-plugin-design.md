@@ -69,12 +69,31 @@ oli-devops/
       │  └─ oli-dev.md              # entrada: /oli-dev <ideia>  e  /oli-dev finalize
       ├─ skills/
       │  └─ dev-cycle/
-      │     └─ SKILL.md             # a COLA / maestro (fases + gates)
+      │     ├─ SKILL.md             # a COLA / maestro — MAGRA: só o fluxo das 8 fases + 4 seções fixas
+      │     ├─ references/          # detalhe carregado sob demanda (progressive disclosure)
+      │     │  ├─ setup-gate.md     # checagem de modelo + worktree + deps
+      │     │  ├─ review-gates.md   # staff-reviewer pré + code-review/simplify/verify pós + security sub-gate
+      │     │  ├─ pre-push-gate.md  # detecção de stack + comandos por linguagem
+      │     │  └─ finalize.md       # checklist de close-out + limpeza pós-merge
+      │     └─ assets/
+      │        ├─ pr-body-template.md     # ## Summary / ## Test plan
+      │        └─ close-out-checklist.md  # project_notes + memória + docs
       ├─ hooks/
       │  ├─ hooks.json              # PreToolUse em git push → chama pre-push-gate.sh
       │  └─ pre-push-gate.sh        # auto-detecta stack e roda lint/format/test/typecheck
+      ├─ scripts/
+      │  └─ model-check.sh          # helper opcional do SETUP gate
+      ├─ evals/
+      │  ├─ evals.json              # cenários de pressão (gates devem disparar)
+      │  └─ README.md               # como rodar with/without comparison
       └─ README.md                  # uso, dependência de superpowers, instalação
 ```
+
+**Progressive disclosure (inspirado em `revfactory/harness` e na anatomia das skills da
+agentskills.io):** a `SKILL.md` é **magra** — contém só o grafo das 8 fases e segue um corpo de
+4 seções fixas (**When to Use / Prerequisites / Workflow / Verification**). O detalhe operacional
+de cada gate vive em `references/*.md`, lido **sob demanda** quando a fase começa. Isso mantém o
+custo de token do maestro baixo em todo ciclo e facilita editar um gate sem mexer no fluxo.
 
 ### 2.4 Dependência
 
@@ -93,6 +112,18 @@ Um único command com dois modos, detectados pelo argumento:
 
 O command é fino: valida o argumento e invoca a skill `dev-cycle` passando o modo. Toda a
 lógica vive na SKILL.md (a cola).
+
+**Resume/checkpoint:** ao iniciar o modo `<ideia>`, o SETUP gate **detecta artefatos já
+existentes** no worktree e retoma do ponto certo em vez de recomeçar do brainstorm:
+
+| Artefato presente | Retoma a partir de |
+|---|---|
+| spec em `docs/superpowers/specs/` + plano em `docs/superpowers/plans/` | Fase 4 (escrita) |
+| só o spec | Fase 2 (review pré-código) / Fase 3 (plano) |
+| nada | Fase 1 (brainstorm) |
+
+A skill **anuncia** de onde está retomando e pede confirmação antes de pular fases (evita assumir
+que um spec velho está aprovado). Isso torna o ciclo resiliente a interrupções.
 
 ---
 
@@ -134,6 +165,11 @@ Invoca `superpowers:subagent-driven-development`: executa o plano tarefa-a-taref
 delegada a um subagente **Opus** seguindo `superpowers:test-driven-development` (RED-GREEN-REFACTOR).
 **Checkpoint commit por fase/tarefa concluída** — pontos de retorno limpos no worktree.
 
+**Serial vs paralelo (padrões nomeados, inspirado no catálogo do `revfactory/harness`):** o maestro
+escolhe o padrão pela topologia do plano — **Pipeline** (sequencial) quando tarefas têm dependência;
+**Fan-out/Fan-in** (`superpowers:dispatching-parallel-agents`) quando há 2+ tarefas independentes sem
+estado compartilhado. Isola conflitos de escrita com worktrees por subagente quando paraleliza.
+
 ### Fase 5 — REVIEW GATE (pós-código)
 
 Encadeia, em ordem, cada um com propósito distinto:
@@ -142,6 +178,12 @@ Encadeia, em ordem, cada um com propósito distinto:
 2. **`/simplify`** — reuso, simplificação, eficiência, altitude (qualidade, não bugs).
 3. **`verify` / `superpowers:verification-before-completion`** — roda o app/testes de verdade e
    confirma comportamento com **evidência** (nunca alegar "passa" sem output).
+
+**Sub-gate condicional de security-review (Producer-Reviewer):** se o diff tocar **superfície
+sensível** — `auth`, secrets/`.env`, SQL/RPC, rede/HTTP, credenciais, browser/`page.evaluate` —
+dispara também `/security-review` (ou o plugin `security-guidance`) além do code-review. Condicional
+(não roda em todo ciclo), detectado pelos paths/conteúdo do diff. Encaixa no `security-baseline` do
+oli-devops. Os review gates são, no vocabulário do harness, loops **Producer-Reviewer** explícitos.
 
 Itera sobre achados materiais antes de seguir.
 
@@ -215,7 +257,24 @@ do ciclo). Os dois compartilham a mesma lógica de detecção.
 
 ---
 
-## 7. Critérios de sucesso
+## 7. Self-evals da skill (testar a própria cola)
+
+Inspirado na *comparative validation* do `revfactory/harness` e no padrão `evals/` da agentskills.io
++ método TDD do `superpowers:writing-skills`: a skill **prova que seus gates disparam**.
+
+- `evals/evals.json` define **cenários de pressão** com asserções, ex.:
+  - agente tenta pular o review pré-código → a skill **deve barrar** e exigir o staff-reviewer;
+  - loop principal não está em Opus → SETUP gate **deve bloquear**;
+  - push com teste quebrado → pre-push gate **deve impedir** (exit 2);
+  - `/oli-dev finalize` em PR não-mergeada → **deve abortar**.
+- Cada cenário roda em subagente isolado (contexto limpo); grading compara saída vs asserção.
+- **With/without comparison:** baseline sem a skill (comportamento solto) vs com a skill (gates ativos),
+  documentando o delta — é o RED→GREEN do writing-skills aplicado a esta skill.
+- `evals/README.md` explica como rodar. Não bloqueia uso; é a rede de regressão da própria skill.
+
+---
+
+## 8. Critérios de sucesso
 
 1. `/plugin marketplace add` no oli-devops + `/plugin install oli-dev` funcionam; `/oli-dev` aparece.
 2. `/oli-dev <ideia>` conduz fases 0–7 sem o usuário precisar invocar skills manualmente, criando
@@ -225,10 +284,12 @@ do ciclo). Os dois compartilham a mesma lógica de detecção.
    roda o close-out.
 5. Subagentes confirmadamente em Opus (verificável no log/telemetria).
 6. README documenta dependência de superpowers e a limitação de pinning do loop principal.
+7. `/oli-dev <ideia>` com spec+plano já presentes **retoma da Fase 4** (não refaz brainstorm).
+8. `evals/evals.json` roda e os cenários de gate passam (gates comprovadamente disparam).
 
 ---
 
-## 8. Riscos e mitigação
+## 9. Riscos e mitigação
 
 | Risco | Mitigação |
 |---|---|
@@ -240,7 +301,7 @@ do ciclo). Os dois compartilham a mesma lógica de detecção.
 
 ---
 
-## 9. Decisões registradas (do brainstorming)
+## 10. Decisões registradas (do brainstorming)
 
 - Pinning de modelo: **subagentes Opus + checagem de gate no SETUP**.
 - Review pré-código: **1 staff-reviewer cético** (Opus).
@@ -250,3 +311,9 @@ do ciclo). Os dois compartilham a mesma lógica de detecção.
   commits por fase, update de docs se necessário**.
 - Casa: **dentro do oli-devops**. Disparo: **command `/oli-dev <ideia>`**. Hook: **skill + backstop já**.
 - Close-out: **subcomando `/oli-dev finalize`** (não trava esperando merge humano).
+- Ideias externas incorporadas (garimpo de `revfactory/harness` + `mukul975/...Cybersecurity-Skills`):
+  **progressive disclosure** (SKILL.md magra + `references/`/`assets/`), **self-evals** (`evals/`),
+  **sub-gate de security-review condicional**, **resume/checkpoint do ciclo**. Padrões nomeados
+  (Pipeline / Fan-out / Producer-Reviewer) e corpo de 4 seções (When to Use / Prerequisites /
+  Workflow / Verification). **Não importados:** o motor meta-factory do harness (gerar times por
+  domínio) e o mapeamento de frameworks de segurança — fora do escopo.
