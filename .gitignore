@@ -14,3 +14,6 @@ tests/tmp/
 
 # Git worktrees (chats paralelos)
 .worktrees/
+
+# SDD scratch
+.superpowers/
