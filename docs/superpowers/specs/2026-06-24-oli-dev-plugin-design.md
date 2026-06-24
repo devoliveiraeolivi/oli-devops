@@ -212,7 +212,10 @@ Exige **evidência de saída** (verification-before-completion). **Bloqueia** se
 
 ### Fase 7 — PUSH + PR
 
-Invoca `commit-commands:commit-push-pr`. Título curto (<70), corpo com `## Summary` e `## Test plan`.
+Invoca `commit-commands:commit-push-pr`. Título curto (<70), corpo com `## Summary`, **`## Decisões`**
+(escolhas + porquê), **`## Pontas soltas / follow-ups`** (deferido/limitações, registrado visível — nada
+de `# TODO` mudo, ver §"sem buracos temporários") e `## Test plan`. Essas seções são escritas **aqui,
+com contexto fresco** — viram a fonte da verdade que o close-out (Fase 8) transcreve pós-merge.
 O push da Fase 7 leva o prefixo `OLI_DEV_GATE_OK=1` (o gate primário já rodou na Fase 6) para o hook
 não re-rodar a suíte (ver §5). **Base = `main` (default inviolável):** a PR sai contra `main` — uma branch por ciclo, sem stacking
 (Princípio 1). Se o usuário **explicitamente** exigir uma PR stacked, a skill avisa do risco e
@@ -238,12 +241,17 @@ Invocação separada, rodada **depois** que a PR foi mergeada. Ordem:
 5. **Deleta branches (só após o check do passo 1):** nunca deletar sem o `gh pr view --json state ==
    MERGED` (Princípio 3). Branch local mergeada via `git branch -d` (nunca `-D` forçado) +
    `commit-commands:clean_gone` para limpar branches `[gone]` (já deletadas no remote pós-merge).
-6. **Log institucional:** registra o trabalho em `docs/project_notes/issues.md` do repo alvo;
-   adiciona a `bugs.md`/`decisions.md` quando aplicável (sistema de memória institucional do projeto).
-7. **Auto-memória:** atualiza a memória do Claude (`~/.claude/.../memory/`) com fatos **não-óbvios**
+   **A fonte da verdade do close-out é o corpo da PR mergeada** (`gh pr view <n> --json body`) — as
+   seções `## Decisões` e `## Pontas soltas` foram escritas com contexto fresco na Fase 7; o finalize
+   (sessão nova pós-merge) **transcreve de lá**, não da memória da sessão.
+6. **Log institucional:** registra o trabalho em `docs/project_notes/issues.md`; `bugs.md` se corrigiu bug.
+7. **Decisões:** transcreve `## Decisões` da PR para `docs/project_notes/decisions.md` (ou ADR) — escolha + porquê.
+8. **Pontas soltas / follow-ups:** para cada item de `## Pontas soltas` da PR, abre registro **rastreável**
+   (`gh issue create` e/ou linha em `issues.md`) — princípio "sem buracos temporários".
+9. **Auto-memória:** atualiza a memória do Claude (`~/.claude/.../memory/`) com fatos **não-óbvios**
    do ciclo, seguindo as regras de memória (um arquivo por fato + ponteiro no MEMORY.md).
-8. **Docs:** se o ciclo mudou arquitetura/contratos, atualiza os `.md` afetados
-   (`docs/architecture/`, `CLAUDE.md`, ADRs) — só se necessário.
+10. **Docs:** se o ciclo mudou arquitetura/contratos, atualiza os `.md` afetados
+    (`docs/architecture/`, `CLAUDE.md`, ADRs) — só se necessário.
 
 ---
 
