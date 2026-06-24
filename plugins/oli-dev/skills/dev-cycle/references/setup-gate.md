@@ -12,3 +12,10 @@
    nunca de outra feature branch.
 4. **Resume/checkpoint.** Detecte artefatos: spec+plano → retome Fase 4; só spec → Fase 2/3;
    nada → Fase 1. Anuncie de onde retoma e confirme antes de pular fases.
+5. **Guard de branch ao retomar.** Antes de retomar trabalho numa branch existente, cheque:
+   (a) estamos num **worktree linkado** (`git rev-parse --git-dir` ≠ `--git-common-dir`); e
+   (b) a PR da branch **não** está MERGED (`gh pr view <branch> --json state`). Se a branch já
+   está MERGED → **barre**: commits aqui viram órfãos (aconteceu na PR #4 → recovery na #5);
+   crie uma branch nova da `main`. Se estamos no checkout principal (sem worktree) → volte para
+   a `main` e crie o worktree. A enforcement determinística disto vive no hook
+   `hooks/branch-state-guard.sh`; este passo é a orientação correspondente.
