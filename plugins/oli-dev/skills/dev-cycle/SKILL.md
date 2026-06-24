@@ -24,7 +24,8 @@ NÃO use para: hotfix trivial de 1 linha já aprovado, perguntas, ou tarefas sem
 1. Uma branch por ciclo, **da `main`**. Sem PRs stacked por padrão.
 2. **Worktree sempre, da `main`.** Nunca trabalhar direto numa branch no dir principal.
 3. **Nunca deletar branch** sem `gh pr view <n> --json state` == `MERGED`.
-4. **Todo review no Opus 4.8** (subagentes com `model: "opus"`, effort alto).
+4. **Todo subagente no Opus 4.8** — execução (escritores TDD da Fase 4) **e** review (Fases 2/5):
+   sempre `model: "opus"`, effort alto. Sem exceção. (O loop principal a skill não troca — Fase 0 checa.)
 
 ## Workflow
 
