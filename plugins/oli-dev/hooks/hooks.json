@@ -4,7 +4,8 @@
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-push-gate.sh\"" }
+          { "type": "command", "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-push-gate.sh\"" },
+          { "type": "command", "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/branch-state-guard.sh\"" }
         ]
       }
     ]

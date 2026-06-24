@@ -23,4 +23,19 @@ assert "description" in pj
 assert "version" not in pj, "do NOT pin version while iterating (stale-cache trap per docs)"
 print("OK manifests")
 PY
+
+# hooks.json: valid JSON + both PreToolUse/Bash hooks registered + their scripts exist
+python - "$ROOT" <<'PY'
+import json, os, sys
+root = sys.argv[1]
+hj = json.load(open(f"{root}/plugins/oli-dev/hooks/hooks.json"))
+pre = hj["hooks"]["PreToolUse"]
+bash = [g for g in pre if g.get("matcher") == "Bash"]
+assert bash, "no Bash PreToolUse group"
+cmds = [h.get("command","") for g in bash for h in g.get("hooks", [])]
+for script in ("pre-push-gate.sh", "branch-state-guard.sh"):
+    assert any(script in c for c in cmds), f"{script} not registered in hooks.json"
+    assert os.path.exists(f"{root}/plugins/oli-dev/hooks/{script}"), f"{script} file missing"
+print("OK hooks.json")
+PY
 echo "PASS test_manifests"
