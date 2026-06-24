@@ -1,0 +1,11 @@
+{
+  "name": "oli-devops",
+  "owner": { "name": "devoliveiraeolivi" },
+  "plugins": [
+    {
+      "name": "oli-dev",
+      "source": "./plugins/oli-dev",
+      "description": "Maestro do ciclo de desenvolvimento OLI: worktree, brainstorm, review, plano, escrita TDD, review, pre-push gate, PR e finalize."
+    }
+  ]
+}
