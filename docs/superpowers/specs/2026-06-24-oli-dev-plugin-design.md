@@ -79,10 +79,8 @@ oli-devops/
       │        ├─ pr-body-template.md     # ## Summary / ## Test plan
       │        └─ close-out-checklist.md  # project_notes + memória + docs
       ├─ hooks/
-      │  ├─ hooks.json              # PreToolUse em git push → chama pre-push-gate.sh
-      │  └─ pre-push-gate.sh        # auto-detecta stack e roda lint/format/test/typecheck
-      ├─ scripts/
-      │  └─ model-check.sh          # helper opcional do SETUP gate
+      │  ├─ hooks.json              # PreToolUse (matcher Bash) → chama pre-push-gate.sh
+      │  └─ pre-push-gate.sh        # filtra git push, auto-detecta stack, roda lint/format/test/typecheck
       ├─ evals/
       │  ├─ evals.json              # cenários de pressão (gates devem disparar)
       │  └─ README.md               # como rodar with/without comparison
@@ -215,7 +213,8 @@ Exige **evidência de saída** (verification-before-completion). **Bloqueia** se
 ### Fase 7 — PUSH + PR
 
 Invoca `commit-commands:commit-push-pr`. Título curto (<70), corpo com `## Summary` e `## Test plan`.
-**Base = `main` (default inviolável):** a PR sai contra `main` — uma branch por ciclo, sem stacking
+O push da Fase 7 leva o prefixo `OLI_DEV_GATE_OK=1` (o gate primário já rodou na Fase 6) para o hook
+não re-rodar a suíte (ver §5). **Base = `main` (default inviolável):** a PR sai contra `main` — uma branch por ciclo, sem stacking
 (Princípio 1). Se o usuário **explicitamente** exigir uma PR stacked, a skill avisa do risco e
 registra no corpo da PR a nota de "re-apontar a base para `main` antes de mergear a anterior"
 (regra do CLAUDE.md global) — mas isso é exceção, não o caminho normal.
@@ -250,14 +249,23 @@ Invocação separada, rodada **depois** que a PR foi mergeada. Ordem:
 
 ## 5. Hook de pré-push (backstop determinístico)
 
-`hooks/hooks.json` registra um **PreToolUse** que casa em comandos `Bash` contendo `git push` e
-invoca `pre-push-gate.sh`. O script:
+`hooks/hooks.json` registra um **PreToolUse** com `matcher: "Bash"` — que dispara em **todo**
+comando Bash; a **filtragem de `git push` é feita no próprio script** (o matcher do Claude Code casa
+por nome de ferramenta, não por conteúdo do comando). O `pre-push-gate.sh`:
 
-1. **Detecta a stack** pelo diretório do repo: `pyproject.toml` → Python; `package.json` → Node.
-2. Roda o gate correspondente (mesmos comandos da Fase 6).
-3. **Exit 2** (bloqueia o push) se qualquer verificação falhar, imprimindo o que quebrou no stderr
-   (o stderr de um hook PreToolUse com exit≠0 volta como feedback pro agente).
-4. **Exit 0** se passar ou se a stack não for reconhecida (não bloqueia o que não sabe checar).
+1. **Extrai** `tool_input.command` do JSON do evento (via `python`, não match no JSON cru — evita
+   falso-positivo tipo `echo "git push depois"`). Se não for um `git push`, **exit 0** imediato.
+2. **Marcador de in-cycle:** se o comando contém `OLI_DEV_GATE_OK=1` (a Fase 7 empurra com esse
+   prefixo, pois o gate primário já rodou na Fase 6), **exit 0** — evita rodar a suíte duas vezes.
+   Push manual fora do ciclo não tem o marcador → o gate roda.
+3. **Diretório correto:** deriva o repo do `cwd` do evento (`git rev-parse --show-toplevel`), não de
+   `CLAUDE_PROJECT_DIR` — crítico em worktree, onde os dois divergem.
+4. **Detecta a stack:** `pyproject.toml` → Python; `package.json` → Node. No Node, só roda um script
+   npm se ele **existir** (`missing script` é skip, não falha).
+5. **Exit 2** (bloqueia) se uma verificação que rodou falhar, imprimindo o que quebrou no stderr
+   (stderr de PreToolUse com exit≠0 volta como feedback pro agente).
+6. **Exit 0** se passar, se a stack não for reconhecida, ou se a ferramenta (`uv`/`npm`) não estiver
+   no PATH (não bloqueia o que não sabe/não pode checar).
 
 **Ressalvas Windows:** o script roda em Git Bash (POSIX) — usar `command -v` para checar
 ferramentas, caminhos POSIX, e degradar com aviso se `uv`/`npm` não estiverem no PATH (não bloquear
