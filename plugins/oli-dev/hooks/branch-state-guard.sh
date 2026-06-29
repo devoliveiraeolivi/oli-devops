@@ -33,7 +33,7 @@ print(e.get("cwd","") or "")' 2>/dev/null || true)"
 gated="$(printf '%s\n' "$cmd" | sed -E 's/&&/\n/g; s/\|\|/\n/g; s/;/\n/g; s/\|/\n/g' | while IFS= read -r seg; do
   seg="$(printf '%s' "$seg" | sed -E 's/^[[:space:]]+//; s/^([A-Za-z_][A-Za-z0-9_]*=[^ ]* +)+//')"
   case "$seg" in
-    'git push'|'git push '*|'git commit'|'git commit '*) echo yes ;;
+    ('git push'|'git push '*|'git commit'|'git commit '*) echo yes ;;
   esac
 done)"
 case "$gated" in
