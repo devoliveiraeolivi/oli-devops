@@ -1,6 +1,6 @@
 {
   "name": "oli-dev",
-  "description": "Conduz o ciclo de desenvolvimento OLI encadeando skills do superpowers com gates opinativos (worktree sempre, Opus nos reviews, pre-push obrigatório, finalize pós-merge). Depende do plugin superpowers.",
+  "description": "Conduz o ciclo de desenvolvimento OLI encadeando skills do superpowers com gates opinativos (worktree sempre, conductor sempre Opus, tier de modelo full/light nos subagentes despachados, pre-push obrigatório, finalize pós-merge). Depende do plugin superpowers.",
   "author": { "name": "devoliveiraeolivi" },
   "homepage": "https://github.com/devoliveiraeolivi/oli-devops",
   "keywords": ["workflow", "tdd", "code-review", "worktree", "orchestration", "oli"]

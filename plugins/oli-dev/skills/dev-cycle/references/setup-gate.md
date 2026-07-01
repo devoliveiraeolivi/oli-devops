@@ -19,3 +19,8 @@
    crie uma branch nova da `main`. Se estamos no checkout principal (sem worktree) → volte para
    a `main` e crie o worktree. A enforcement determinística disto vive no hook
    `hooks/branch-state-guard.sh`; este passo é a orientação correspondente.
+6. **Tier de modelo.** Parseie o tier (`references/model-tiers.md`): default `full`; `light` só
+   se for a 1ª palavra seguida de ideia. **Ecoe a interpretação** ("tier=X, ideia='…'") antes de
+   agir. Se `light` tocar contrato/enforcement/superfície sensível → recomende `full` e peça
+   **ack** explícito. No **resume** (spec+plano → Fase 4), leia o tier do cabeçalho do plano;
+   ausente → `full` (fallback seguro).

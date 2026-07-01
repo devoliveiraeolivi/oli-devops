@@ -6,6 +6,21 @@ follows strict [SemVer](policies/SEMVER.md).
 
 ## [Unreleased]
 
+### Added
+
+- **`oli-dev` tier de modelo `light`** (`/oli-dev light <ideia>`): os escritores TDD (Fase 4) e o
+  staff-reviewer (Fase 2) rodam em **Sonnet 4.6** em vez de Opus, para ganho de custo/latência. O
+  default (`full` / sem token) continua idêntico (tudo Opus). Conductor sempre Opus; `/code-review`,
+  `/simplify`, `verify`, `/security-review` inalterados. Fonte única em
+  `plugins/oli-dev/skills/dev-cycle/references/model-tiers.md`.
+
+### Changed
+
+- **`oli-dev` "Princípio 4" redefinido**: de *"todo subagente em Opus"* para *"conductor sempre
+  Opus; os dois papéis despachados (escritores TDD + staff-reviewer) seguem o tier"*. `/oli-dev
+  <ideia>` sem token continua full-Opus (comportamento anterior). O parsing de `finalize` passou a
+  ser match exato (antes era "começa com").
+
 ### Fixed
 
 - **`plugins/oli-dev/tests/`**: `test_manifests.sh` and `test_evals.sh` now detect the
