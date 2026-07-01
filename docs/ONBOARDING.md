@@ -123,6 +123,32 @@ Replace `<repo-name>` with the actual repo name. Position the job after
 lint/test, before build-and-push. If the old security job was in `needs:` of
 `build-and-push`, update to `needs: [lint, test, security-baseline]`.
 
+#### Padrão de trigger (custo de Actions)
+
+O gate real é o **CI no PR** (checks required no branch protection). Com um
+mantenedor solo e merges em série (`strict=false`), o run do PR já reflete o
+que cai no main — re-rodar no `push:main` é desperdício puro (e o scan de
+imagem Trivy é caro). Por isso:
+
+- **Standalone `security-baseline.yml`**: use só `pull_request` + um
+  `schedule` semanal + `workflow_dispatch` (é o que o template já traz). O
+  `schedule` cobre CVE **nova** divulgada contra um main que não mudou — o
+  único caso que o gatilho só-PR perderia. **Não** adicione `push:main`.
+- **CI monolítico (lint/test + build no mesmo `ci.yml`)**: mantenha o CI
+  disparando só no `pull_request` e mova o `build-and-push` para um workflow
+  próprio disparado direto no `push:main` (sem `needs:` de re-gate). Assim o
+  merge builda a imagem sem re-rodar lint/test/Trivy. Ver oli-gateway
+  (PR do split) e oli-indexer #355 como referência.
+- **`concurrency: cancel-in-progress`** em todo workflow de PR — cancela runs
+  superados quando há push iterativo no mesmo PR.
+- **Nunca** ponha branches efêmeras (`claude/**`, `feat/*`) no `push:` de um
+  workflow que também tem `pull_request` — elas rodam 2× no mesmo SHA
+  (double-run).
+
+> Se um dia entrar mais gente committando, flipar branch protection
+> `strict=true` (exige branch up-to-date antes do merge) restaura a garantia
+> sem precisar re-rodar CI no main.
+
 ### Step 6 — Update CLAUDE.md
 
 Append the contents of `oli-devops/templates/<profile>/claude-md-section.md`

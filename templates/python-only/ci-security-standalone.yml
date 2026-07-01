@@ -4,10 +4,20 @@
 name: Security Baseline
 
 on:
-  push:
-    branches: [main]
+  # Roda no PR (é o gate required) + schedule semanal p/ pegar CVE nova divulgada
+  # contra um main que não mudou (o gatilho só-PR perde isso). NÃO adicione
+  # push:main: com mantenedor solo + merges em série, seria re-run puro do scan
+  # que o PR já fez. Ver docs/ONBOARDING.md § Step 5 (padrão de trigger).
   pull_request:
     branches: [main]
+  schedule:
+    - cron: '0 9 * * 1'  # Segundas 09:00 UTC
+  workflow_dispatch:
+
+# Cancela scan superado quando há novo push no mesmo PR.
+concurrency:
+  group: security-baseline-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   security-baseline:

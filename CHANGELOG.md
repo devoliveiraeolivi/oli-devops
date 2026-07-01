@@ -6,6 +6,19 @@ follows strict [SemVer](policies/SEMVER.md).
 
 ## [Unreleased]
 
+### Changed
+
+- **Padrão de trigger dos templates de segurança** (`templates/*/ci-security-standalone.yml`): de
+  `push:main + pull_request` para `pull_request` + `schedule` semanal + `workflow_dispatch`, com
+  `concurrency: cancel-in-progress`. Remove o re-run do scan Trivy no `push:main` (era re-run puro
+  do que o PR já escaneou, dado mantenedor solo + merges em série); o `schedule` semanal cobre CVE
+  nova divulgada contra um main que não mudou — o único caso que o gatilho só-PR perderia. Novos
+  adotantes nascem com o padrão certo; consumers existentes só herdam ao re-copiar o template.
+- **`docs/ONBOARDING.md` § Step 5**: nova subseção "Padrão de trigger (custo de Actions)" —
+  documenta CI só-no-PR, build em workflow próprio no `push:main` (sem re-gate), `concurrency`, e o
+  anti-padrão de branches efêmeras (`claude/**`, `feat/*`) no `push:` (double-run). Referencia
+  oli-gateway (split) e oli-indexer #355.
+
 ### Added
 
 - **`oli-dev` tier de modelo `light`** (`/oli-dev light <ideia>`): os escritores TDD (Fase 4) e o
