@@ -3,7 +3,8 @@ set -eu
 HERE="$(cd "$(dirname "$0")" && pwd -W 2>/dev/null || pwd)"
 EV="$HERE/../evals/evals.json"
 [ -f "$EV" ] || { echo "FAIL: evals.json missing" >&2; exit 1; }
-python - "$EV" <<'PY'
+PYTHON="$(command -v python3 || command -v python)" || { echo "FAIL: no python interpreter found (need python3 or python)" >&2; exit 1; }
+"$PYTHON" - "$EV" <<'PY'
 import json, sys
 data = json.load(open(sys.argv[1]))
 assert isinstance(data, list) and len(data) >= 5, "need >=5 scenarios"
