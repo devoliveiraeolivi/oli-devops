@@ -10,6 +10,10 @@ pass=0; fail=0
 # run gate, capture rc WITHOUT tripping any -e; usage: rc=$(gate_rc <json> [env assignments...])
 gate_rc() { json="$1"; shift; rc=0; printf '%s' "$json" | env "$@" sh "$GATE" >/dev/null 2>&1 || rc=$?; echo "$rc"; }
 check() { if [ "$1" = "$2" ]; then pass=$((pass+1)); else echo "FAIL: $3 (got rc=$1, want $2)" >&2; fail=$((fail+1)); fi; }
+# captura só o stderr do gate (o run() ecoa ">> <cmd>" em stderr antes de executar)
+gate_err() { json="$1"; shift; printf '%s' "$json" | env "$@" sh "$GATE" 2>&1 >/dev/null; }
+# fake uv: sempre sai 0 → deixa o gate compor+ecoar o cmd sem toolchain real
+mkdir -p "$TMP/bin"; printf '#!/bin/sh\nexit 0\n' > "$TMP/bin/uv"; chmod +x "$TMP/bin/uv"
 
 # 1. Non-push command → exit 0
 check "$(gate_rc '{"tool_input":{"command":"git status"}}')" 0 "non-push passes through"
@@ -50,6 +54,21 @@ if [ -f "$TMP/checkok/ran" ]; then pass=$((pass+1)); else echo "FAIL: check.sh r
 mkdir -p "$TMP/override/scripts"; printf '[project]\nname="x"\n' > "$TMP/override/pyproject.toml"
 printf '#!/bin/sh\nexit 1\n' > "$TMP/override/scripts/check.sh"; chmod +x "$TMP/override/scripts/check.sh"
 check "$(gate_rc '{"tool_input":{"command":"git push"}}' OLI_DEV_GATE_DIR="$TMP/override" OLI_DEV_PYTHON_CMDS=true)" 0 "override vence check.sh"
+
+# 10. Fallback (sem check.sh): cmd composto tira black, mantém ruff format + mypy.
+mkdir -p "$TMP/fb"; printf '[project]\nname="x"\n' > "$TMP/fb/pyproject.toml"
+err10="$(gate_err '{"tool_input":{"command":"git push"}}' OLI_DEV_GATE_DIR="$TMP/fb" PATH="$TMP/bin:$PATH")"
+if echo "$err10" | grep -q 'ruff format'; then pass=$((pass+1)); else echo "FAIL: fallback roda ruff format" >&2; fail=$((fail+1)); fi
+if echo "$err10" | grep -q 'black'; then echo "FAIL: fallback não pode rodar black" >&2; fail=$((fail+1)); else pass=$((pass+1)); fi
+
+# 11. Fallback mypy baseline-aware quando há .mypy-baseline.txt.
+mkdir -p "$TMP/fbbl"; printf '[project]\nname="x"\n' > "$TMP/fbbl/pyproject.toml"; : > "$TMP/fbbl/.mypy-baseline.txt"
+err11="$(gate_err '{"tool_input":{"command":"git push"}}' OLI_DEV_GATE_DIR="$TMP/fbbl" PATH="$TMP/bin:$PATH")"
+if echo "$err11" | grep -q 'mypy-baseline filter'; then pass=$((pass+1)); else echo "FAIL: baseline presente → mypy-baseline filter" >&2; fail=$((fail+1)); fi
+
+# 12. Fallback mypy cru quando NÃO há baseline.
+err12="$(gate_err '{"tool_input":{"command":"git push"}}' OLI_DEV_GATE_DIR="$TMP/fb" PATH="$TMP/bin:$PATH")"
+if echo "$err12" | grep -q 'mypy-baseline filter'; then echo "FAIL: sem baseline → mypy cru" >&2; fail=$((fail+1)); else pass=$((pass+1)); fi
 
 echo "pre_push_gate: $pass passed, $fail failed"
 [ "$fail" -eq 0 ] || exit 1

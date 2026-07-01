@@ -64,8 +64,19 @@ if [ -f "$dir/pyproject.toml" ]; then
   if ! command -v uv >/dev/null 2>&1 && [ -z "${OLI_DEV_PYTHON_CMDS:-}" ]; then
     echo "oli-dev gate: 'uv' não está no PATH — pulando checagem python em $dir." >&2; exit 0
   fi
-  cmds="${OLI_DEV_PYTHON_CMDS:-uv run black --check src/ tests/ && uv run ruff check src/ && uv run pytest tests/unit/ -q && uv run mypy src/}"
   cd "$dir" || exit 0
+  if [ -n "${OLI_DEV_PYTHON_CMDS:-}" ]; then
+    cmds="$OLI_DEV_PYTHON_CMDS"
+  else
+    # mypy baseline-aware: com baseline, só falha em erro NOVO (igual ao CI).
+    if [ -f ".mypy-baseline.txt" ] && uv run mypy-baseline --version >/dev/null 2>&1; then
+      mypy_cmd="uv run mypy src/ | uv run mypy-baseline filter --baseline-path .mypy-baseline.txt --allow-unsynced"
+    else
+      mypy_cmd="uv run mypy src/"
+    fi
+    # Sem black (legado → ruff format) e sem pytest (já roda no verify da Fase 5).
+    cmds="uv run ruff check src/ && uv run ruff format --check src/ tests/ && $mypy_cmd"
+  fi
   if ! run "$cmds"; then
     echo "BLOQUEADO: pre-push gate (python) falhou em $dir. Corrija antes de dar push." >&2
     exit 2
