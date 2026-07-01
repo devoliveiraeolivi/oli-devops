@@ -12,6 +12,9 @@ follows strict [SemVer](policies/SEMVER.md).
   Python interpreter portably (`python3`, falling back to `python`) instead of assuming a
   bare `python` exists. Fixes spurious `python: command not found` suite failures on modern
   macOS, where only `python3` is present.
+- **`.gitignore`**: also ignore `.claude/worktrees/` (the location the native `EnterWorktree`
+  tool uses), not just the manual-fallback `.worktrees/`. Prevents the worktree from polluting
+  `git status` / being accidentally committed on the main checkout.
 
 ## [v1.1.1] — 2026-05-08
 

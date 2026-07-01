@@ -12,8 +12,9 @@ Thumbs.db
 tests/tmp/
 *.log
 
-# Git worktrees (chats paralelos)
+# Git worktrees (chats paralelos): fallback manual (.worktrees/) e local do tool nativo EnterWorktree
 .worktrees/
+.claude/worktrees/
 
 # SDD scratch
 .superpowers/
