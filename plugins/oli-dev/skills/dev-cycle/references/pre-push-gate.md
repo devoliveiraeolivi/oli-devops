@@ -11,6 +11,7 @@ Gate primário (você roda e mostra evidência); o hook `hooks/pre-push-gate.sh`
     rodaram no `verify` da Fase 5).
 - **Node** (`package.json`): `npm run lint` · `npm test` · `npm run build` (scripts presentes).
 - **Stack desconhecida:** não bloqueia (não checa o que não conhece), mas avise.
+- **Override:** `OLI_DEV_PYTHON_CMDS` / `OLI_DEV_NODE_CMDS`, se setados, vencem tudo (inclusive o `check.sh`) — escape hatch p/ casos especiais e testes.
 
 Exija **evidência de saída** (verification-before-completion). **Bloqueie o push** se qualquer
 verificação que rodou falhar. Ferramenta ausente (`uv`/`npm` fora do PATH) → avise e degrade, não
