@@ -34,5 +34,22 @@ check "$(gate_rc '{"tool_input":{"command":"FOO=bar git push"}}' OLI_DEV_GATE_DI
 # 6. Push in a python stack whose checks PASS → exit 0
 check "$(gate_rc '{"tool_input":{"command":"git push"}}' OLI_DEV_GATE_DIR="$TMP/py" OLI_DEV_PYTHON_CMDS=true)" 0 "python passing check allows"
 
+# 7. scripts/check.sh presente + falhando → gate o prefere e bloqueia (exit 2),
+#    mesmo o fallback python passando.
+mkdir -p "$TMP/withcheck/scripts"; printf '[project]\nname="x"\n' > "$TMP/withcheck/pyproject.toml"
+printf '#!/bin/sh\nexit 1\n' > "$TMP/withcheck/scripts/check.sh"; chmod +x "$TMP/withcheck/scripts/check.sh"
+check "$(gate_rc '{"tool_input":{"command":"git push"}}' OLI_DEV_GATE_DIR="$TMP/withcheck")" 2 "check.sh falhando bloqueia (preferido sobre fallback)"
+
+# 8. scripts/check.sh presente + passando → gate roda e libera; marcador prova que rodou.
+mkdir -p "$TMP/checkok/scripts"
+printf '#!/bin/sh\ntouch "%s/checkok/ran"\nexit 0\n' "$TMP" > "$TMP/checkok/scripts/check.sh"; chmod +x "$TMP/checkok/scripts/check.sh"
+check "$(gate_rc '{"tool_input":{"command":"git push"}}' OLI_DEV_GATE_DIR="$TMP/checkok")" 0 "check.sh passando libera"
+if [ -f "$TMP/checkok/ran" ]; then pass=$((pass+1)); else echo "FAIL: check.sh realmente rodou (marcador ausente)" >&2; fail=$((fail+1)); fi
+
+# 9. Override explícito OLI_DEV_PYTHON_CMDS vence o check.sh (escape hatch).
+mkdir -p "$TMP/override/scripts"; printf '[project]\nname="x"\n' > "$TMP/override/pyproject.toml"
+printf '#!/bin/sh\nexit 1\n' > "$TMP/override/scripts/check.sh"; chmod +x "$TMP/override/scripts/check.sh"
+check "$(gate_rc '{"tool_input":{"command":"git push"}}' OLI_DEV_GATE_DIR="$TMP/override" OLI_DEV_PYTHON_CMDS=true)" 0 "override vence check.sh"
+
 echo "pre_push_gate: $pass passed, $fail failed"
 [ "$fail" -eq 0 ] || exit 1
