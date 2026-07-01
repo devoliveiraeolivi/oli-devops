@@ -3,14 +3,17 @@ set -eu
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd -W 2>/dev/null || pwd)"   # repo root (Windows-compatible path for Python)
 fail() { echo "FAIL: $1" >&2; exit 1; }
 
-# JSON validity (python is always present in these repos)
-python -c "import json,sys; json.load(open('$ROOT/.claude-plugin/marketplace.json'))" \
+# Python interpreter: python3 on modern macOS, python on older/other systems. Portable detection.
+PYTHON="$(command -v python3 || command -v python)" || fail "no python interpreter found (need python3 or python)"
+
+# JSON validity
+"$PYTHON" -c "import json,sys; json.load(open('$ROOT/.claude-plugin/marketplace.json'))" \
   || fail "marketplace.json is not valid JSON"
-python -c "import json,sys; json.load(open('$ROOT/plugins/oli-dev/.claude-plugin/plugin.json'))" \
+"$PYTHON" -c "import json,sys; json.load(open('$ROOT/plugins/oli-dev/.claude-plugin/plugin.json'))" \
   || fail "plugin.json is not valid JSON"
 
 # Required fields
-python - "$ROOT" <<'PY'
+"$PYTHON" - "$ROOT" <<'PY'
 import json, sys
 root = sys.argv[1]
 mk = json.load(open(f"{root}/.claude-plugin/marketplace.json"))
@@ -25,7 +28,7 @@ print("OK manifests")
 PY
 
 # hooks.json: valid JSON + both PreToolUse/Bash hooks registered + their scripts exist
-python - "$ROOT" <<'PY'
+"$PYTHON" - "$ROOT" <<'PY'
 import json, os, sys
 root = sys.argv[1]
 hj = json.load(open(f"{root}/plugins/oli-dev/hooks/hooks.json"))

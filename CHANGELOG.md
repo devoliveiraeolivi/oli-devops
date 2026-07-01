@@ -6,6 +6,13 @@ follows strict [SemVer](policies/SEMVER.md).
 
 ## [Unreleased]
 
+### Fixed
+
+- **`plugins/oli-dev/tests/`**: `test_manifests.sh` and `test_evals.sh` now detect the
+  Python interpreter portably (`python3`, falling back to `python`) instead of assuming a
+  bare `python` exists. Fixes spurious `python: command not found` suite failures on modern
+  macOS, where only `python3` is present.
+
 ## [v1.1.1] — 2026-05-08
 
 ### Fixed
