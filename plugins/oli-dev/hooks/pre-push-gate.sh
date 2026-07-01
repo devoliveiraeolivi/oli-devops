@@ -49,6 +49,17 @@ fi
 
 run() { echo ">> $1" >&2; sh -c "$1"; }
 
+# Gate próprio do repo (espelho do CI, fonte única) vence — a menos que um
+# override *_CMDS esteja setado (escape hatch + determinismo de teste).
+if [ -z "${OLI_DEV_PYTHON_CMDS:-}${OLI_DEV_NODE_CMDS:-}" ] && [ -x "$dir/scripts/check.sh" ]; then
+  cd "$dir" || exit 0
+  if ! run "scripts/check.sh --fast"; then
+    echo "BLOQUEADO: scripts/check.sh --fast falhou em $dir. Corrija antes de dar push." >&2
+    exit 2
+  fi
+  exit 0
+fi
+
 if [ -f "$dir/pyproject.toml" ]; then
   if ! command -v uv >/dev/null 2>&1 && [ -z "${OLI_DEV_PYTHON_CMDS:-}" ]; then
     echo "oli-dev gate: 'uv' não está no PATH — pulando checagem python em $dir." >&2; exit 0
