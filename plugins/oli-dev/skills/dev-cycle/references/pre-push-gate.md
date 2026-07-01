@@ -2,8 +2,13 @@
 
 Gate primário (você roda e mostra evidência); o hook `hooks/pre-push-gate.sh` é o backstop.
 
-- **Python** (`pyproject.toml`): `uv run black --check src/ tests/` · `uv run ruff check src/` ·
-  `uv run pytest tests/unit/ -q` · `uv run mypy src/`.
+- **Python** (`pyproject.toml`):
+  - Se existe `scripts/check.sh` no repo → rode **`scripts/check.sh --fast`** (fonte
+    única que espelha o `ci.yml`). É o mesmo comando do `.githooks/pre-push` do repo.
+  - Senão (fallback): `uv run ruff check src/` · `uv run ruff format --check src/ tests/` ·
+    `uv run mypy src/` (baseline-aware: se há `.mypy-baseline.txt`, filtra pelo baseline,
+    igual ao CI). **Sem `black`** (legado → `ruff format`) e **sem `pytest`** (os testes já
+    rodaram no `verify` da Fase 5).
 - **Node** (`package.json`): `npm run lint` · `npm test` · `npm run build` (scripts presentes).
 - **Stack desconhecida:** não bloqueia (não checa o que não conhece), mas avise.
 
