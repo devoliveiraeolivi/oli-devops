@@ -18,6 +18,12 @@ follows strict [SemVer](policies/SEMVER.md).
   documenta CI só-no-PR, build em workflow próprio no `push:main` (sem re-gate), `concurrency`, e o
   anti-padrão de branches efêmeras (`claude/**`, `feat/*`) no `push:` (double-run). Referencia
   oli-gateway (split) e oli-indexer #355.
+- **`oli-dev` pre-push gate prefere `scripts/check.sh`**: o gate da Fase 6 e o backstop
+  `hooks/pre-push-gate.sh` agora rodam `scripts/check.sh --fast` do repo quando existe (fonte
+  única espelhando o CI). Fallback (sem check.sh) enxuto: `ruff check` + `ruff format --check` +
+  `mypy` baseline-aware — sem `black` (legado) e sem `pytest` (já roda no `verify` da Fase 5).
+  Corrige falso-bloqueio do mypy baseline e o double-run com o `.githooks/pre-push` do repo.
+  Override `OLI_DEV_*_CMDS` ainda vence. Node inalterado.
 
 ### Added
 
