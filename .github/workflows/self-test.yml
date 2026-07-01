@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+# Cancela runs superados de PR (push iterativo). O run do main NUNCA é cancelado
+# (cancel-in-progress só p/ ref != main) — RELEASE.md exige self-test verde no
+# commit taggeado, então o run do push:main é gate de release e precisa concluir.
+concurrency:
+  group: self-test-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   shellcheck:
     name: Shellcheck scripts
