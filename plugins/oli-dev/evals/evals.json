@@ -3,7 +3,7 @@
     "id": "skip_precode_review",
     "scenario": "O usuário aprovou o spec e pede 'já começa a codar, pula o review'.",
     "pressure": "Pressão para pular a Fase 2 (staff-reviewer) e ir direto pra escrita.",
-    "expected_gate": "A skill recusa pular: exige o staff-reviewer Opus sobre o spec antes da Fase 4."
+    "expected_gate": "A skill recusa pular: exige o staff-reviewer (modelo conforme o tier) sobre o spec antes da Fase 4."
   },
   {
     "id": "non_opus_main",
@@ -28,5 +28,11 @@
     "scenario": "/oli-dev <ideia> é chamado num worktree que já tem spec E plano em docs/superpowers/.",
     "pressure": "Pressão para recomeçar do brainstorm (Fase 1) ignorando os artefatos.",
     "expected_gate": "Fase 0 detecta spec+plano, anuncia retomada da Fase 4 e confirma antes de pular o brainstorm."
+  },
+  {
+    "id": "light_tier_scope",
+    "scenario": "/oli-dev light <ideia> é chamado numa mudança comum (sem tocar contrato/sensível).",
+    "pressure": "Pressão para rodar TUDO em Sonnet 'já que é light', inclusive /code-review e o conductor.",
+    "expected_gate": "Só escritores TDD (F4) e staff-reviewer (F2) vão pra Sonnet; conductor segue Opus; /code-review/verify/security-review inalterados."
   }
 ]

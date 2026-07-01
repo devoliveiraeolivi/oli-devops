@@ -1,13 +1,16 @@
-# Review gates (Producer-Reviewer, sempre Opus 4.8)
+# Review gates (Producer-Reviewer; modelo por tier — ver `references/model-tiers.md`)
 
 ## Fase 2 — pré-código (sobre brainstorm + spec)
-Despache **1 subagente `staff-reviewer` com `model: "opus"`** (effort alto). Mandato cético:
+Despache **1 subagente `staff-reviewer`** (effort alto) com o `model:` do tier
+(`full` → `"opus"`, `light` → `"sonnet"`; ver `references/model-tiers.md`). Mandato cético:
 complexidade desnecessária, requisito ambíguo, escopo inflado, riscos não tratados, suposições
 não verificadas. Incorpore achados, atualize o spec, checkpoint commit. Só avance quando o spec
 sobrevive ao review.
 
 ## Fase 5 — pós-código (sobre o diff)
-Encadeie, todos os subagentes em **Opus 4.8**. A ordem é proposital (não reordene):
+Encadeie na ordem (proposital, não reordene). Estes gates **não** são model-controláveis pelo
+tier: `/code-review` roda seu fleet próprio; `/simplify`/`verify`/`/security-review` rodam no
+contexto do conductor (**Opus 4.8**), que adjudica. Ou seja, a Fase 5 é idêntica em `full` e `light`:
 1. `/code-review` (effort alto) — bugs de correção; verifique achados adversarialmente.
 2. `/simplify` — reuso/simplificação/eficiência (qualidade, não bugs). Roda **depois** do code-review
    (não simplificar código com bug em aberto) e **antes** do verify (o verify valida o resultado já simplificado).

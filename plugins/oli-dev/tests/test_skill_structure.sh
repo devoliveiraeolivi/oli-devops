@@ -16,13 +16,16 @@ for s in "## When to Use" "## Prerequisites" "## Workflow" "## Verification"; do
   grep -qF "$s" "$SK" || fail "missing section: $s"
 done
 # References wired (progressive disclosure)
-for r in setup-gate review-gates pre-push-gate finalize; do
+for r in setup-gate review-gates pre-push-gate finalize model-tiers; do
   grep -qF "references/$r.md" "$SK" || fail "SKILL.md does not link references/$r.md"
 done
 # The 8 phases are listed
 for p in "Fase 0" "Fase 1" "Fase 2" "Fase 3" "Fase 4" "Fase 5" "Fase 6" "Fase 7" "Fase 8"; do
   grep -qF "$p" "$SK" || fail "missing $p in workflow"
 done
-# Command declares both modes
+# Command declares finalize mode + the light/full tier tokens
 grep -qF "finalize" "$CMD" || fail "command missing finalize mode"
+for t in light full; do
+  grep -qiF "$t" "$CMD" || fail "command missing tier token: $t"
+done
 echo "PASS test_skill_structure"
