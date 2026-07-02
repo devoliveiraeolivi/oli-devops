@@ -11,12 +11,25 @@ fi
 readonly __OLI_DEVOPS_COMMON_SH_LOADED=1
 
 # ----- Tool versions (single source of truth) -----
-# Bumped in MINOR/PATCH releases per policies/SEMVER.md.
-# VERIFY current versions before committing — see Task 3 Step 1.
+# Bumped in MINOR/PATCH releases per policies/SEMVER.md; procedure in
+# CLAUDE.md § "Bumping a tool version".
+#
+# Images are pinned by multi-arch manifest digest in addition to the tag:
+# registry tags are mutable, and the 2026-03 trivy incident shipped malicious
+# images under new tags (0.69.5/0.69.6). Refresh digests on every bump:
+#   trivy:    curl -s https://hub.docker.com/v2/repositories/aquasec/trivy/tags/<ver> | jq -r .digest
+#   gitleaks: TOKEN=$(curl -s "https://ghcr.io/token?scope=repository:gitleaks/gitleaks:pull" | jq -r .token)
+#             curl -sI -H "Authorization: Bearer $TOKEN" \
+#               -H "Accept: application/vnd.oci.image.index.v1+json" \
+#               https://ghcr.io/v2/gitleaks/gitleaks/manifests/v<ver> | grep -i docker-content-digest
 # shellcheck disable=SC2034  # referenced by sourcing scripts (trivy-fs.sh, gitleaks-protect.sh)
-readonly TRIVY_VERSION="0.69.3"
+readonly TRIVY_VERSION="0.72.0"
+# shellcheck disable=SC2034  # referenced by sourcing scripts
+readonly TRIVY_IMAGE_DIGEST="sha256:cffe3f5161a47a6823fbd23d985795b3ed72a4c806da4c4df16266c02accdd6f"
 # shellcheck disable=SC2034  # referenced by sourcing scripts
 readonly GITLEAKS_VERSION="8.30.1"
+# shellcheck disable=SC2034  # referenced by sourcing scripts
+readonly GITLEAKS_IMAGE_DIGEST="sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f"
 
 # ----- Colors -----
 # Check stderr (fd 2) because log functions write to stderr.

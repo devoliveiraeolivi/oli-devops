@@ -14,6 +14,7 @@ Updated as part of each onboarding PR (Step 11 of ONBOARDING.md).
 | oli-ops | js-docker | — | — | pending — first js-docker consumer |
 | oli-vault | python-only | — | — | pending — no root Dockerfile |
 | anp-bi-etl | python-only | — | — | pending |
+| oli-etl | — | v1.1.1 (CI) | — | adopted early (not in the original Phase 1 plan): `security-baseline.yml` → `security.yml@v1.1.1`, verified 2026-07-02; pre-commit hooks + CI status not yet verified |
 
 ## Phase 2 (planned)
 
