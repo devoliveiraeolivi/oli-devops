@@ -8,6 +8,11 @@ follows strict [SemVer](policies/SEMVER.md).
 
 ### Changed
 
+- **`oli-dev` review gates — princípio "evidência ou abstenha"** (`references/review-gates.md`): bloco
+  inviolável no topo, valendo p/ staff-reviewer (Fase 2), gates da Fase 5 e conductor. Todo achado
+  exige evidência citada (`file:line`/output); proibido asserir de memória/doc desatualizado;
+  `⚠️ não verificado` é saída obrigatória; conductor adjudica com evidência, não por deferência.
+  Fecha o buraco de reviewer que "afirma sem checar" e lava palpite em fato revisado.
 - **Padrão de trigger dos templates de segurança** (`templates/*/ci-security-standalone.yml`): de
   `push:main + pull_request` para `pull_request` + `schedule` semanal + `workflow_dispatch`, com
   `concurrency: cancel-in-progress`. Remove o re-run do scan Trivy no `push:main` (era re-run puro
