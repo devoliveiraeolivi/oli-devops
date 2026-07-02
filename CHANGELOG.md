@@ -36,6 +36,8 @@ follows strict [SemVer](policies/SEMVER.md).
   `gate_rc`/`gate_err` passam a invocar o hook com o shell da matriz ({`sh`, `dash`}, via
   `run_all.sh`, skip anunciado se ausente) — o hook é exercitado sob cada shell, não o arquivo
   de teste. Feedback local rápido p/ a classe de bugs de portabilidade-sh (3 fugas históricas).
+  Novo `tests/test_shellcheck.sh` (skip anunciado sem shellcheck local) linta `hooks/*.sh` +
+  `tests/*.sh`; achados pré-existentes nos testes zerados via diretivas justificadas (SC2015/SC2069).
 - **`oli-dev` tier de modelo `light`** (`/oli-dev light <ideia>`): os escritores TDD (Fase 4) e o
   staff-reviewer (Fase 2) rodam em **Sonnet 4.6** em vez de Opus, para ganho de custo/latência. O
   default (`full` / sem token) continua idêntico (tudo Opus). Conductor sempre Opus; `/code-review`,
