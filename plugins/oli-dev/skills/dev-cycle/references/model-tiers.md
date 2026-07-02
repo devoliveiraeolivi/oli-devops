@@ -8,6 +8,10 @@ O tier troca **apenas o modelo dos dois papéis cujo modelo o conductor realment
 controla** — os **escritores TDD (Fase 4)** e o **staff-reviewer (Fase 2)**, ambos
 despachados via `Agent`/`subagent-driven-development` com `model:` explícito.
 
+Escopo desta matriz: **modelo, e só modelo**. Integrações ambientes opcionais condicionadas
+ao tier (quando presentes na sessão) vivem na **Fase 0** — ver `setup-gate.md`, passo 7 —
+e não entram nesta fonte única.
+
 **Justificativa = custo/latência, não qualidade.** A rede que pega bug é **idêntica**
 nos dois tiers. Não use o tier como se fosse "mesma qualidade mais barato" — a aposta
 honesta é: onde a produção de código pode ir pra Sonnet, o ganho de token/latência é

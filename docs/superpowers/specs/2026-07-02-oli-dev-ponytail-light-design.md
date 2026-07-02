@@ -50,6 +50,8 @@ princípio "o tier troca apenas o modelo" fica intacto); detecção e evidência
 1. `sh plugins/oli-dev/tests/run_all.sh` → ALL GREEN (incluindo o assert novo).
 2. O texto do passo 7 não deixa ambiguidade nos 3 ramos (light+presente / full / ausente), com
    critério de detecção e de evidência operacionais (não subjetivos).
-3. Invariantes preservados: tokens `main` (setup-gate.md) e asserts existentes intactos;
-   `model-tiers.md` NÃO menciona ponytail (princípio "apenas o modelo" intacto).
+3. Invariantes preservados: tokens `main` (setup-gate.md) e asserts existentes intactos.
+   `model-tiers.md`: o princípio/tabela do tier NÃO incorpora o ponytail; permitida apenas uma
+   nota de cross-ref explicitamente rotulada "fora do escopo modelo" (ajuste adjudicado no review
+   pós-código — achado L2: sem a nota, o doc "fonte única" induzia leitura incompleta do tier).
 4. CHANGELOG no mesmo commit.
