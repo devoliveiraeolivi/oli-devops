@@ -1,5 +1,23 @@
 # Review gates (Producer-Reviewer; modelo por tier — ver `references/model-tiers.md`)
 
+## Princípio inviolável — evidência ou abstenha (todos os gates)
+
+Um reviewer que **afirma sem checar** — de memória, de como "acha" que uma tool/API/flag
+se comporta, ou de doc desatualizado — é **pior que não ter reviewer**: lava um palpite em
+"fato revisado" que ninguém mais questiona e leva a decisão pro caminho errado. Vale pra
+staff-reviewer (Fase 2), pros gates da Fase 5 e pro conductor.
+
+- **Todo achado precisa de evidência citada** — `file:line`, ou comando + saída real. Sem
+  evidência não é finding: é palpite → rotule **`⚠️ não verificado`**, não afirme.
+- **Nunca raciocine de memória sobre comportamento de código/tool/API** — cheque o arquivo real
+  ou rode. Doc/CLAUDE.md/memória podem estar velhos; o código é a verdade. Confirme que
+  arquivo/função/flag citada existe antes de basear um achado nela.
+- **"Não consegui verificar X" é saída válida e obrigatória** — melhor um ⚠️ honesto que uma
+  asserção confiante e errada. Não preencha lacuna com suposição.
+- **O conductor adjudica com evidência, não por deferência** — claim de reviewer que seja
+  load-bearing ou contradiga o código é checado antes de virar ação (ex.: não mandar corrigir
+  código que está certo por causa de um "achado" que o reviewer não verificou).
+
 ## Fase 2 — pré-código (sobre brainstorm + spec)
 Despache **1 subagente `staff-reviewer`** (effort alto) com o `model:` do tier
 (`full` → `"opus"`, `light` → `"sonnet"`; ver `references/model-tiers.md`). Mandato cético:
