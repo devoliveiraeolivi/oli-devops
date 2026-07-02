@@ -6,10 +6,12 @@
    (brainstorming, writing-plans, subagent-driven-development, test-driven-development,
    requesting-code-review, using-git-worktrees, finishing-a-development-branch,
    verification-before-completion). Se faltar, avise e pare.
-3. **Worktree (da main).** `git fetch` + garanta `main` atualizada. Crie
-   `.worktrees/<feat>` na branch `feat/<feat>` **a partir da main** via
-   `superpowers:using-git-worktrees`. Garanta `.worktrees/` no `.gitignore`. Nunca pasta irmã,
-   nunca de outra feature branch.
+   `using-git-worktrees` só é exigida no caminho de **fallback** do passo 3 (EnterWorktree nativo
+   indisponível); a ausência dela não bloqueia quando o caminho nativo existe.
+3. **Worktree (da main).** `git fetch` + garanta `main` atualizada. Crie o worktree **a partir da
+   main** — nunca de outra feature branch. Prefira o **EnterWorktree nativo** (cria em
+   `.claude/worktrees/`, já no `.gitignore`); sem ele, fallback `superpowers:using-git-worktrees`
+   (mecânica é da skill; garanta `.worktrees/` no `.gitignore` nesse caminho).
 4. **Resume/checkpoint.** Detecte artefatos: spec+plano → retome Fase 4; só spec → Fase 2/3;
    nada → Fase 1. Anuncie de onde retoma e confirme antes de pular fases.
 5. **Guard de branch ao retomar.** Antes de retomar trabalho numa branch existente, cheque:

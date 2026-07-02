@@ -70,7 +70,7 @@ else
   if [ "$gd" = "$gcd" ]; then in_wt=0; else in_wt=1; fi
 fi
 if [ "$in_wt" = "0" ]; then
-  echo "oli-dev guard: trabalhando no checkout principal numa feature branch ('$branch') — considere um worktree (.worktrees/<feat>)." >&2
+  echo "oli-dev guard: trabalhando no checkout principal numa feature branch ('$branch') — considere um worktree." >&2
 fi
 
 # Anti-órfão: estado da PR como string nua.

@@ -37,7 +37,7 @@ NÃO use para: hotfix trivial de 1 linha já aprovado, perguntas, ou tarefas sem
 Mantenha um todo por fase. Modo `<ideia>` = Fases 0–7; modo `finalize` = Fase 8.
 Carregue o `references/*.md` da fase **quando ela começa** (progressive disclosure).
 
-- **Fase 0 — SETUP gate** → ver `references/setup-gate.md`. Checa Opus + deps + tier (`full`/`light`) + cria worktree da main. Resume/checkpoint: detecta spec/plano existentes e retoma da fase certa (pede confirmação antes de pular).
+- **Fase 0 — SETUP gate** → ver `references/setup-gate.md`. Checa Opus + deps + tier (`full`/`light`) + cria worktree da main (EnterWorktree nativo preferido; fallback `using-git-worktrees`). Resume/checkpoint: detecta spec/plano existentes e retoma da fase certa (pede confirmação antes de pular).
 - **Fase 1 — BRAINSTORM** → invoca `superpowers:brainstorming`. Spec em `docs/superpowers/specs/`. Commit.
 - **Fase 2 — REVIEW pré-código** → ver `references/review-gates.md`. 1 `staff-reviewer` cético (modelo por tier: `full`=Opus, `light`=Sonnet). Resolve achados. Commit.
 - **Fase 3 — PLANO** → invoca `superpowers:writing-plans`. Commit.

@@ -8,6 +8,13 @@ follows strict [SemVer](policies/SEMVER.md).
 
 ### Changed
 
+- **`oli-dev` condutor realinhado à prática e podado de duplicação com o superpowers**:
+  `setup-gate.md` prefere o **EnterWorktree nativo** (`.claude/worktrees/`) com
+  `using-git-worktrees` como fallback (dep exigida só nesse caminho; gitignore do path usado);
+  `finalize.md` delega a mecânica de remoção de worktree a `finishing-a-development-branch`
+  (caveat Windows/junction sai — vive na skill do superpowers); mensagem informativa do
+  `branch-state-guard.sh` fica agnóstica de local. Gates OLI (da main, MERGED antes de deletar,
+  close-out) intactos.
 - **`oli-dev` review gates — princípio "evidência ou abstenha"** (`references/review-gates.md`): bloco
   inviolável no topo, valendo p/ staff-reviewer (Fase 2), gates da Fase 5 e conductor. Todo achado
   exige evidência citada (`file:line`/output); proibido asserir de memória/doc desatualizado;
