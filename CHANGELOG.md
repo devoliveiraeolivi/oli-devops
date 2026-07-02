@@ -6,12 +6,29 @@ follows strict [SemVer](policies/SEMVER.md).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Templates `renovate.json`: habilita o manager `pre-commit`** (`"pre-commit":
+  {"enabled": true}` nos 3 profiles). O manager é [desabilitado por default no
+  Renovate](https://docs.renovatebot.com/modules/manager/pre-commit/), então o
+  `rev:` do bloco oli-devops no `.pre-commit-config.yaml` dos consumers **nunca
+  era bumpado** — pins ficaram meses parados (oli-auth/oli-scraper ainda em
+  v1.0.0) enquanto o pin da reusable-workflow (manager `github-actions`, ligado
+  por default) avançava. Corrige a premissa "Renovate propaga bumps" da
+  `SEMVER.md` para a camada pre-commit. **Consumers já onboardados precisam
+  patchar o próprio `renovate.json`** — o template só corrige novos adotantes.
+
 ### Changed
 
 - **`oli-dev` setup-gate passo 7**: removida a nota temporária do trial do ponytail — condição de
   remoção cumprida (trial validado pelo usuário em 2026-07-02; resultado registrado em
   `docs/project_notes/issues.md`). As premissas técnicas restantes (alcance nos subagentes;
   persistência per-session) viraram follow-up instrumentado no mesmo arquivo.
+- **`docs/ADOPTION-STATUS.md`: passagem de ground-truth (2026-07-02)** — a tabela Phase 1 foi
+  reconstruída lendo cada repo via `gh` (não da memória de PRs de onboarding). Estava toda como
+  `pending`, mas 6 de 8 repos já consomem o baseline e estão verdes. Documenta duas lacunas de
+  propagação: (1) todos pinam `security.yml@v1.1.1` → carregam `gitleaks-action@v2`, que morre em
+  2026-09-16; (2) o gap do manager pre-commit acima.
 
 ## [v1.2.0] — 2026-07-02
 
