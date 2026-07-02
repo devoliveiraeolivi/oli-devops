@@ -24,6 +24,19 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -qq shellcheck
           shellcheck -x --source-path=scripts scripts/*.sh
+          # Hooks/testes do plugin não fazem source → sem --source-path extra.
+          shellcheck plugins/oli-dev/hooks/*.sh plugins/oli-dev/tests/*.sh
+
+  plugin-tests:
+    name: oli-dev plugin tests (dash + GNU sed)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run plugin suite
+        # Ubuntu: /bin/sh = dash e sed = GNU — o eixo de portabilidade que o macOS local
+        # não cobre (classe das 3 fugas históricas). dash vem no runner; se um dia faltar,
+        # o run_all anuncia o skip (aí sim instalar via apt).
+        run: sh plugins/oli-dev/tests/run_all.sh
 
   yamllint:
     name: YAML lint
