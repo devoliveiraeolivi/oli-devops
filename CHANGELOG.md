@@ -6,6 +6,8 @@ follows strict [SemVer](policies/SEMVER.md).
 
 ## [Unreleased]
 
+## [v1.2.0] — 2026-07-02
+
 ### Security
 
 - **Actions de terceiros pinadas por SHA** em `security.yml` e `self-test.yml` (versão anotada em
@@ -92,14 +94,14 @@ follows strict [SemVer](policies/SEMVER.md).
   **removido em 2026-09-16** — a partir daí a v2 para de funcionar. v3 = mesmo comportamento,
   runtime Node 24. **Consumers pinados em ≤ v1.1.1 carregam a v2 e precisam subir para o próximo
   release antes de 2026-09-16.**
-- **Templates re-pinados para `v1.1.1`** (`rev:` do `pre-commit-config.yaml`, `@vX.Y.Z` dos
+- **Templates re-pinados** (`rev:` do `pre-commit-config.yaml`, `@vX.Y.Z` dos
   `ci-security-*.yml` e `claude-md-section.md` — estavam em v1.0.0/v1.1.0): novos adotantes
-  copiavam um baseline com o bug do 403 do gitleaks já corrigido na v1.1.1. Novo item no
-  checklist de prerequisites do `RELEASE.md` trava a recorrência a cada release.
+  copiavam um baseline com o bug do 403 do gitleaks já corrigido na v1.1.1. No commit de
+  release apontam para **v1.2.0**; novo item no checklist de prerequisites do `RELEASE.md`
+  trava a recorrência a cada release.
 - **`docs/ADOPTION-STATUS.md`: registra `oli-etl`** — adotou a camada CI cedo
   (`security-baseline.yml` → `security.yml@v1.1.1`, verificado em 2026-07-02), mas não constava
   na tabela (a v1.1.1 foi inclusive descoberta no PR #4 dele). Doc e realidade divergiam.
-
 - **`plugins/oli-dev/tests/`**: `test_manifests.sh` and `test_evals.sh` now detect the
   Python interpreter portably (`python3`, falling back to `python`) instead of assuming a
   bare `python` exists. Fixes spurious `python: command not found` suite failures on modern

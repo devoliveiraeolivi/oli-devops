@@ -7,7 +7,7 @@ Este repo adota o baseline de segurança central em
 - **Hooks ativos (pre-commit)**: `trivy-fs`, `gitleaks`
 - **Rodar manualmente**: `pre-commit run --all-files`
 - **CI**: job `security-baseline` usa o reusable workflow
-  `devoliveiraeolivi/oli-devops/.github/workflows/security.yml@v1.1.1`
+  `devoliveiraeolivi/oli-devops/.github/workflows/security.yml@v1.2.0`
 - **Suprimir achado**: adicionar em `.trivyignore` ou `.gitleaksignore` com
   formato obrigatório: `CVE-XXXX  # reason: <razão>, review: YYYY-MM-DD (@owner)`
   — ver [EXCEPTIONS policy](https://github.com/devoliveiraeolivi/oli-devops/blob/main/policies/EXCEPTIONS.md)

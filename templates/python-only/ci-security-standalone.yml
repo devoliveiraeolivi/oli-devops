@@ -22,5 +22,5 @@ concurrency:
 jobs:
   security-baseline:
     name: Security Baseline (oli-devops)
-    uses: devoliveiraeolivi/oli-devops/.github/workflows/security.yml@v1.1.1
+    uses: devoliveiraeolivi/oli-devops/.github/workflows/security.yml@v1.2.0
     # No image-name: trivy-image job is conditionally skipped

@@ -4,7 +4,7 @@
 
 repos:
   - repo: https://github.com/devoliveiraeolivi/oli-devops
-    rev: v1.1.1  # pinned exact — Renovate propagates bumps
+    rev: v1.2.0  # pinned exact — Renovate propagates bumps
     hooks:
       - id: trivy-fs
       - id: gitleaks
