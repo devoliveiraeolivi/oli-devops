@@ -17,5 +17,7 @@ Invoque a skill `dev-cycle` (plugin oli-dev) e siga-a à risca. Faça o parsing 
 O tier só troca o modelo dos escritores TDD (Fase 4) e do staff-reviewer (Fase 2): `full` = Opus
 (default, = hoje), `light` = Sonnet. Conductor sempre Opus; `/code-review`, `verify`,
 `/security-review` inalterados. Detalhes: `references/model-tiers.md`.
+Com o plugin ponytail presente na sessão, o tier `light` também ativa `/ponytail lite` na Fase 0
+(opcional, fail-open — ver `references/setup-gate.md`, passo 7).
 
 Não pule fases nem gates. Os Princípios de processo do spec são invioláveis.
