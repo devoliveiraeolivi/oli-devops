@@ -19,6 +19,7 @@ encadeando skills do **superpowers** com gates opinativos.
 - `/oli-dev <ideia da feature>` → ciclo completo (Fases 0–7), termina em PR aberta. Tier `full` (default).
 - `/oli-dev light <ideia>` → tier `light`: escritores TDD + staff-reviewer em **Sonnet 4.6** (custo/latência;
   conductor e `/code-review`/`verify`/`/security-review` inalterados). Ver `skills/dev-cycle/references/model-tiers.md`.
+  Com o plugin **ponytail** presente, o tier light também ativa `/ponytail lite` na Fase 0 (opcional, fail-open).
 - `/oli-dev finalize` → close-out + limpeza pós-merge (Fase 8), depois que a PR foi mergeada.
 
 ## O que ele faz
