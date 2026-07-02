@@ -6,8 +6,30 @@ follows strict [SemVer](policies/SEMVER.md).
 
 ## [Unreleased]
 
+### Security
+
+- **Actions de terceiros pinadas por SHA** em `security.yml` e `self-test.yml` (versão anotada em
+  comentário ao lado de cada pin). Motivação: incidente supply-chain do ecossistema Trivy em
+  2026-03 — release maliciosa `v0.69.4` (janela de ~3h), imagens `aquasec/trivy:0.69.5/0.69.6`
+  com C2 embutido (removidas do Docker Hub) e **todas as tags 0.0.1–0.34.2 da `trivy-action`
+  comprometidas**. O pin vigente (`trivy-action@v0.36.0`, 2026-04-22) foi verificado como
+  pós-incidente e seguro; o SHA elimina a classe de ataque por tag mutável.
+- **Imagens docker dos hooks pinadas por digest** (`aquasec/trivy` e `ghcr.io/gitleaks/gitleaks`
+  via `tag@sha256:...` em `scripts/common.sh`): tag de registry é mutável — o mesmo incidente
+  publicou imagens maliciosas sob tags novas. One-liners de refresh documentados no próprio
+  `common.sh`; passo novo no procedimento de bump do `CLAUDE.md`.
+
 ### Changed
 
+- **Trivy 0.69.3 → 0.72.0** (`scripts/common.sh`): bump deliberado após verificação do incidente
+  acima (0.70.0+ são pós-resolução; latest 0.72.0 de 2026-06-30). Scanner mais novo pode trazer
+  detecções novas → próximo release é **MINOR** per `policies/SEMVER.md`. Fixtures validadas
+  pelo self-test CI (runner local sem docker/trivy).
+- **`gitleaks protect --staged` → `gitleaks git --pre-commit --staged`**
+  (`scripts/gitleaks-protect.sh` + descrição do hook em `.pre-commit-hooks.yaml`): `protect` está
+  deprecated desde a 8.19.0 (oculto do `--help`); o comando novo espelha o hook pre-commit oficial
+  do gitleaks. Mesmo engine e mesma detecção na 8.30.1 pinada. Binário **local** < 8.19.0 agora
+  cai para a imagem docker pinada com aviso, em vez de quebrar no subcomando inexistente.
 - **`oli-dev` condutor realinhado à prática e podado de duplicação com o superpowers**:
   `setup-gate.md` prefere o **EnterWorktree nativo** (`.claude/worktrees/`) com
   `using-git-worktrees` como fallback (dep exigida só nesse caminho; gitignore do path usado);
@@ -36,6 +58,10 @@ follows strict [SemVer](policies/SEMVER.md).
   `mypy` baseline-aware — sem `black` (legado) e sem `pytest` (já roda no `verify` da Fase 5).
   Corrige falso-bloqueio do mypy baseline e o double-run com o `.githooks/pre-push` do repo.
   Override `OLI_DEV_*_CMDS` ainda vence. Node inalterado.
+- **`oli-dev` "Princípio 4" redefinido**: de *"todo subagente em Opus"* para *"conductor sempre
+  Opus; os dois papéis despachados (escritores TDD + staff-reviewer) seguem o tier"*. `/oli-dev
+  <ideia>` sem token continua full-Opus (comportamento anterior). O parsing de `finalize` passou a
+  ser match exato (antes era "começa com").
 
 ### Added
 
@@ -59,14 +85,20 @@ follows strict [SemVer](policies/SEMVER.md).
   `/simplify`, `verify`, `/security-review` inalterados. Fonte única em
   `plugins/oli-dev/skills/dev-cycle/references/model-tiers.md`.
 
-### Changed
-
-- **`oli-dev` "Princípio 4" redefinido**: de *"todo subagente em Opus"* para *"conductor sempre
-  Opus; os dois papéis despachados (escritores TDD + staff-reviewer) seguem o tier"*. `/oli-dev
-  <ideia>` sem token continua full-Opus (comportamento anterior). O parsing de `finalize` passou a
-  ser match exato (antes era "começa com").
-
 ### Fixed
+
+- **`security.yml`: `gitleaks-action` v2 → v3.0.0** (SHA-pinado): a v2 roda em Node 20, que
+  deixou de ser o default dos runners em **2026-06-02** (v2 já exige env var de opt-out) e será
+  **removido em 2026-09-16** — a partir daí a v2 para de funcionar. v3 = mesmo comportamento,
+  runtime Node 24. **Consumers pinados em ≤ v1.1.1 carregam a v2 e precisam subir para o próximo
+  release antes de 2026-09-16.**
+- **Templates re-pinados para `v1.1.1`** (`rev:` do `pre-commit-config.yaml`, `@vX.Y.Z` dos
+  `ci-security-*.yml` e `claude-md-section.md` — estavam em v1.0.0/v1.1.0): novos adotantes
+  copiavam um baseline com o bug do 403 do gitleaks já corrigido na v1.1.1. Novo item no
+  checklist de prerequisites do `RELEASE.md` trava a recorrência a cada release.
+- **`docs/ADOPTION-STATUS.md`: registra `oli-etl`** — adotou a camada CI cedo
+  (`security-baseline.yml` → `security.yml@v1.1.1`, verificado em 2026-07-02), mas não constava
+  na tabela (a v1.1.1 foi inclusive descoberta no PR #4 dele). Doc e realidade divergiam.
 
 - **`plugins/oli-dev/tests/`**: `test_manifests.sh` and `test_evals.sh` now detect the
   Python interpreter portably (`python3`, falling back to `python`) instead of assuming a

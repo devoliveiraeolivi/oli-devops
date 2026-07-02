@@ -24,6 +24,10 @@ on:
         type: number
         default: 0
 
+# Third-party actions are SHA-pinned (version noted in the trailing comment).
+# Tags are mutable; the 2026-03 trivy-action supply-chain incident (all tags
+# 0.0.1–0.34.2 compromised) is exactly the attack SHA pins prevent.
+
 # Least-privilege permissions for the reusable workflow.
 # Note: the `permissions:` block of a reusable workflow is a hard cap —
 # callers cannot elevate beyond what is declared here. Adding more would
@@ -42,10 +46,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
       - name: Build image for scanning
         run: |
@@ -56,7 +60,7 @@ jobs:
 
       # Policy (CI layer): HIGH+CRITICAL with fix available → FAIL
       - name: Trivy scan — HIGH/CRITICAL with fix (fail)
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: "${{ inputs.image-name }}:scan"
           format: table
@@ -66,7 +70,7 @@ jobs:
 
       # Policy (CI layer): HIGH+CRITICAL without fix → WARN (exit 0)
       - name: Trivy scan — HIGH/CRITICAL without fix (warn)
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: "${{ inputs.image-name }}:scan"
           format: table
@@ -79,11 +83,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout (full history for gitleaks)
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: ${{ inputs.gitleaks-fetch-depth }}
 
+      # v3 = v2 with the runtime moved to Node 24 (no behavior change).
+      # Required: GitHub removes Node 20 from hosted runners on 2026-09-16;
+      # since 2026-06-02 v2 already needs an opt-out env var to run.
       - name: Run gitleaks
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

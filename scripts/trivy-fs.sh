@@ -26,8 +26,10 @@ fi
 check_docker || exit 1
 
 log_info "using trivy via docker: aquasec/trivy:${TRIVY_VERSION}"
+# tag@digest: docker resolves by the (immutable) digest; the tag is
+# documentation. See common.sh for why images are digest-pinned.
 MSYS_NO_PATHCONV=1 exec docker run --rm \
   -v "$(docker_pwd):/src:ro" \
   -v "oli-devops-trivy-cache:/root/.cache/trivy" \
-  "aquasec/trivy:${TRIVY_VERSION}" \
+  "aquasec/trivy:${TRIVY_VERSION}@${TRIVY_IMAGE_DIGEST}" \
   "${TRIVY_ARGS[@]}" /src

@@ -4,7 +4,7 @@
 
   security-baseline:
     name: Security Baseline (oli-devops)
-    uses: devoliveiraeolivi/oli-devops/.github/workflows/security.yml@v1.0.0
+    uses: devoliveiraeolivi/oli-devops/.github/workflows/security.yml@v1.1.1
     with:
       image-name: REPLACE_WITH_REPO_NAME  # e.g., oli-ops
       # dockerfile: Dockerfile

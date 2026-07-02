@@ -54,7 +54,9 @@ Every change is high-leverage and every bug is amplified.
 
 ### Bumping a tool version
 
-1. Update `TRIVY_VERSION` or `GITLEAKS_VERSION` in `scripts/common.sh`
+1. Update `TRIVY_VERSION` or `GITLEAKS_VERSION` in `scripts/common.sh` **and**
+   the matching `*_IMAGE_DIGEST` (refresh one-liners are in the comment above
+   the constants). A stale digest makes the docker fallback pull the old image.
 2. Run self-test locally:
    ```bash
    cd tests/fixtures/clean && bash ../../../scripts/trivy-fs.sh  # should pass

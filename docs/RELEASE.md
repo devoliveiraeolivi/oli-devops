@@ -8,6 +8,11 @@ How to cut a new version of oli-devops.
 - [ ] `CHANGELOG.md` has a new section for the version
 - [ ] For MAJOR releases: `CHANGELOG.md` has a `## Migration` subsection
 - [ ] Tool version bumps (if any) tested locally against fixtures
+- [ ] `templates/**` re-pinned to the version being tagged (`rev:` in
+      `pre-commit-config.yaml`, `@vX.Y.Z` in `ci-security-*.yml` and
+      `claude-md-section.md`) — new adopters copy these; a stale pin ships
+      them an old baseline (this is how v1.0.0 lingered in templates until
+      v1.1.1 existed)
 
 ## Decide the version bump
 

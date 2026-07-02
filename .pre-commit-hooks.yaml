@@ -14,7 +14,7 @@
   name: Gitleaks secrets scan (staged files)
   description: >-
     Scans staged files for secrets (API keys, tokens, credentials).
-    Fails on any detection. Uses 'gitleaks protect --staged'.
+    Fails on any detection. Uses 'gitleaks git --pre-commit --staged'.
   entry: scripts/gitleaks-protect.sh
   language: script
   pass_filenames: false
