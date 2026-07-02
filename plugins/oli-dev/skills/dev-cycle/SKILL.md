@@ -37,7 +37,7 @@ NÃO use para: hotfix trivial de 1 linha já aprovado, perguntas, ou tarefas sem
 Mantenha um todo por fase. Modo `<ideia>` = Fases 0–7; modo `finalize` = Fase 8.
 Carregue o `references/*.md` da fase **quando ela começa** (progressive disclosure).
 
-- **Fase 0 — SETUP gate** → ver `references/setup-gate.md`. Checa Opus + deps + tier (`full`/`light`) + cria worktree da main (EnterWorktree nativo preferido; fallback `using-git-worktrees`). Resume/checkpoint: detecta spec/plano existentes e retoma da fase certa (pede confirmação antes de pular).
+- **Fase 0 — SETUP gate** → ver `references/setup-gate.md`. Checa Opus + deps + tier (`full`/`light`) + cria worktree da main (EnterWorktree nativo preferido; fallback `using-git-worktrees`) + ponytail por tier (opcional). Resume/checkpoint: detecta spec/plano existentes e retoma da fase certa (pede confirmação antes de pular).
 - **Fase 1 — BRAINSTORM** → invoca `superpowers:brainstorming`. Spec em `docs/superpowers/specs/`. Commit.
 - **Fase 2 — REVIEW pré-código** → ver `references/review-gates.md`. 1 `staff-reviewer` cético (modelo por tier: `full`=Opus, `light`=Sonnet). Resolve achados. Commit.
 - **Fase 3 — PLANO** → invoca `superpowers:writing-plans`. Commit.
@@ -50,7 +50,8 @@ Carregue o `references/*.md` da fase **quando ela começa** (progressive disclos
 ## Verification
 
 Antes de declarar qualquer fase concluída, confirme com **evidência** (output real, nunca alegação):
-- Fase 0: worktree existe e está na branch certa (`git worktree list`, `git branch --show-current`).
+- Fase 0: worktree existe e está na branch certa (`git worktree list`, `git branch --show-current`);
+  se ponytail presente e tier=`light`, o nível foi confirmado com output colado.
 - Fase 2/5: o staff-reviewer foi despachado com o `model:` do tier, o conductor adjudicou em Opus, e os achados materiais foram resolvidos.
 - Fase 6: os comandos do gate passaram (cole o output).
 - Fase 7: a PR foi criada (URL).

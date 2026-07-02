@@ -24,4 +24,6 @@ grep -qi 'security-review' "$BASE/references/review-gates.md" || fail "review-ga
 grep -qi 'MERGED' "$BASE/references/finalize.md" || fail "finalize.md must gate on MERGED state"
 grep -qi 'pyproject\|package.json' "$BASE/references/pre-push-gate.md" || fail "pre-push-gate.md missing stack detection"
 grep -qi 'main' "$BASE/references/setup-gate.md" || fail "setup-gate.md must require branch from main"
+# Passo do ponytail por tier (opcional, fail-open) documentado na Fase 0
+grep -qi 'ponytail' "$BASE/references/setup-gate.md" || fail "setup-gate.md must document the ponytail-by-tier step"
 echo "PASS test_references"

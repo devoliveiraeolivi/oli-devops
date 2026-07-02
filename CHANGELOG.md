@@ -39,6 +39,11 @@ follows strict [SemVer](policies/SEMVER.md).
 
 ### Added
 
+- **`oli-dev` Fase 0: ponytail por tier (opcional, fail-open)** — com o plugin ponytail presente
+  na sessão, tier `light` ativa `/ponytail lite` automaticamente (evidência de nível colada);
+  `full` não toca no ponytail (não sobrescreve escolha global do usuário); ausência anuncia e
+  segue. `model-tiers.md` intacto (o tier continua trocando apenas o modelo dos papéis
+  despachados). Assert de estrutura novo em `test_references.sh`.
 - **`self-test.yml`: cobertura de CI para o plugin oli-dev** — job `shellcheck` passa a lintar
   `plugins/oli-dev/{hooks,tests}/*.sh`, e novo job `plugin-tests` roda a suíte no ubuntu
   (`/bin/sh` = dash + GNU sed): é o eixo de ambiente que o macOS local não cobre e por onde as
