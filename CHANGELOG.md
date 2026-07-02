@@ -11,10 +11,10 @@ follows strict [SemVer](policies/SEMVER.md).
 - **`oli-dev` condutor realinhado à prática e podado de duplicação com o superpowers**:
   `setup-gate.md` prefere o **EnterWorktree nativo** (`.claude/worktrees/`) com
   `using-git-worktrees` como fallback (dep exigida só nesse caminho; gitignore do path usado);
-  `finalize.md` delega a mecânica de remoção de worktree a `finishing-a-development-branch`
-  (caveat Windows/junction sai — vive na skill do superpowers); mensagem informativa do
-  `branch-state-guard.sh` fica agnóstica de local. Gates OLI (da main, MERGED antes de deletar,
-  close-out) intactos.
+  `finalize.md` delega a mecânica de remoção de worktree a `finishing-a-development-branch`, mas
+  MANTÉM o caveat Windows/junction (verificado: a skill do superpowers NÃO o cobre) e o "nunca
+  pasta irmã do repo" no `setup-gate.md`; mensagem informativa do `branch-state-guard.sh` fica
+  agnóstica de local. Gates OLI (da main, MERGED antes de deletar, close-out) intactos.
 - **`oli-dev` review gates — princípio "evidência ou abstenha"** (`references/review-gates.md`): bloco
   inviolável no topo, valendo p/ staff-reviewer (Fase 2), gates da Fase 5 e conductor. Todo achado
   exige evidência citada (`file:line`/output); proibido asserir de memória/doc desatualizado;
@@ -46,7 +46,11 @@ follows strict [SemVer](policies/SEMVER.md).
 - **`oli-dev` testes: matriz de shells nos testes de hook** (`OLI_DEV_TEST_SHELL`): os helpers
   `gate_rc`/`gate_err` passam a invocar o hook com o shell da matriz ({`sh`, `dash`}, via
   `run_all.sh`, skip anunciado se ausente) — o hook é exercitado sob cada shell, não o arquivo
-  de teste. Feedback local rápido p/ a classe de bugs de portabilidade-sh (3 fugas históricas).
+  de teste. `run_all.sh` decide a matriz por **introspecção** (teste entra se consome
+  `OLI_DEV_TEST_SHELL` — fonte única, sem whitelist paralela) e um **meta-assert** em
+  `test_manifests.sh` falha se algum teste com `gate_rc()` deixar de consumir a env-var (trava a
+  reversão silenciosa da matriz). Feedback local rápido p/ a classe de bugs de portabilidade-sh
+  (3 fugas históricas).
   Novo `tests/test_shellcheck.sh` (skip anunciado sem shellcheck local) linta `hooks/*.sh` +
   `tests/*.sh`; achados pré-existentes nos testes zerados via diretivas justificadas (SC2015/SC2069).
 - **`oli-dev` tier de modelo `light`** (`/oli-dev light <ideia>`): os escritores TDD (Fase 4) e o

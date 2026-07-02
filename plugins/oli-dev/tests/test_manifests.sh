@@ -43,4 +43,15 @@ for script in ("pre-push-gate.sh", "branch-state-guard.sh"):
     assert os.path.exists(f"{root}/plugins/oli-dev/hooks/{script}"), f"{script} file missing"
 print("OK hooks.json")
 PY
+# Meta-assert: fecha a reversão silenciosa da matriz de shells. Todo teste que define gate_rc()
+# (exercita um hook) DEVE invocá-lo pela forma parametrizada `OLI_DEV_TEST_SHELL:-` — se ela virar
+# `sh` fixo, a matriz de shells some sem ninguém perceber. Uma mera menção da env-var em comentário
+# NÃO conta (por isso o pattern exige o `:-`, não o bareword). run_all.sh decide a matriz pela
+# mesma forma parametrizada (fonte única), então cair aqui = teste some da matriz.
+for t in "$ROOT"/plugins/oli-dev/tests/test_*.sh; do
+  grep -q 'gate_rc()' "$t" || continue
+  grep -q 'OLI_DEV_TEST_SHELL:-' "$t" \
+    || fail "$(basename "$t") define gate_rc() mas não invoca o hook pela forma parametrizada (OLI_DEV_TEST_SHELL:-) — matriz de shells silenciosamente perdida"
+done
+
 echo "PASS test_manifests"
