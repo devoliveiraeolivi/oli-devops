@@ -2,6 +2,8 @@
 # NOTE: no `set -e` — we deliberately capture non-zero exit codes (the gate returns 2 on block).
 # With `set -e`, `sh "$GATE"` returning 2 would abort the whole test before `check` runs.
 set -u
+# SC2015: A && B || C aqui é intencional (pwd -W só existe no Git-Bash/Windows; fallback pwd).
+# shellcheck disable=SC2015
 HERE="$(cd "$(dirname "$0")" && pwd -W 2>/dev/null || pwd)"
 GATE="$HERE/../hooks/pre-push-gate.sh"
 TMP="$(mktemp -d)"
@@ -11,6 +13,8 @@ pass=0; fail=0
 gate_rc() { json="$1"; shift; rc=0; printf '%s' "$json" | env "$@" "${OLI_DEV_TEST_SHELL:-sh}" "$GATE" >/dev/null 2>&1 || rc=$?; echo "$rc"; }
 check() { if [ "$1" = "$2" ]; then pass=$((pass+1)); else echo "FAIL: $3 (got rc=$1, want $2)" >&2; fail=$((fail+1)); fi; }
 # captura só o stderr do gate (o run() ecoa ">> <cmd>" em stderr antes de executar)
+# SC2069: ordem intencional — captura stderr p/ asserts de mensagem, descarta stdout.
+# shellcheck disable=SC2069
 gate_err() { json="$1"; shift; printf '%s' "$json" | env "$@" "${OLI_DEV_TEST_SHELL:-sh}" "$GATE" 2>&1 >/dev/null; }
 # fake uv: sempre sai 0 → deixa o gate compor+ecoar o cmd sem toolchain real
 mkdir -p "$TMP/bin"; printf '#!/bin/sh\nexit 0\n' > "$TMP/bin/uv"; chmod +x "$TMP/bin/uv"

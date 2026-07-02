@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 set -eu
+# SC2015: A && B || C aqui é intencional (pwd -W só existe no Git-Bash/Windows; fallback pwd).
+# shellcheck disable=SC2015
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd -W 2>/dev/null || pwd)"   # repo root (Windows-compatible path for Python)
 fail() { echo "FAIL: $1" >&2; exit 1; }
 
