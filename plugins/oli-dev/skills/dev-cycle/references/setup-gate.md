@@ -33,9 +33,9 @@
    - **tier=`light` + disponível** → invoque `/ponytail lite`. **Evidência**: cole o output da
      invocação ou, se não houver texto capturável, o de `/ponytail` sem argumento (reporta o
      nível). Se nenhum produzir texto, anuncie "sem output capturável" e siga (registre na PR).
-   - **tier=`full`** → **não toque no ponytail** (não ligar ≠ desligar: se o usuário o ligou
-     globalmente por escolha própria, o ciclo não sobrescreve).
-   - **Ausente (qualquer tier)** → anuncie ("ponytail ausente — seguindo sem pressão ambiente")
+   - **tier=`full`** (ponytail presente ou ausente) → **não toque no ponytail** (não ligar ≠
+     desligar: se o usuário o ligou globalmente por escolha própria, o ciclo não sobrescreve).
+   - **tier=`light` + ausente** → anuncie ("ponytail ausente — seguindo sem pressão ambiente")
      e siga. Ausência NUNCA bloqueia o ciclo.
    Nota (1º ciclo do trial): o alcance da injeção ambiente nos subagentes despachados (escritores
    TDD da Fase 4) não está verificado — observe e registre o resultado como item em
