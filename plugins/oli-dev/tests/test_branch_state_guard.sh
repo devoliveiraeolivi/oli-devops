@@ -5,9 +5,9 @@ HERE="$(cd "$(dirname "$0")" && pwd -W 2>/dev/null || pwd)"
 GUARD="$HERE/../hooks/branch-state-guard.sh"
 pass=0; fail=0
 # run guard, capture rc; usage: rc=$(gate_rc <json> [env assignments...])
-gate_rc() { json="$1"; shift; rc=0; printf '%s' "$json" | env "$@" sh "$GUARD" >/dev/null 2>&1 || rc=$?; echo "$rc"; }
+gate_rc() { json="$1"; shift; rc=0; printf '%s' "$json" | env "$@" "${OLI_DEV_TEST_SHELL:-sh}" "$GUARD" >/dev/null 2>&1 || rc=$?; echo "$rc"; }
 # capture stderr (stdout discarded); usage: err=$(gate_err <json> [env...])
-gate_err() { json="$1"; shift; printf '%s' "$json" | env "$@" sh "$GUARD" 2>&1 >/dev/null; }
+gate_err() { json="$1"; shift; printf '%s' "$json" | env "$@" "${OLI_DEV_TEST_SHELL:-sh}" "$GUARD" 2>&1 >/dev/null; }
 check() { if [ "$1" = "$2" ]; then pass=$((pass+1)); else echo "FAIL: $3 (got rc=$1, want $2)" >&2; fail=$((fail+1)); fi; }
 checkc() { if printf '%s' "$1" | grep -qi "$2"; then pass=$((pass+1)); else echo "FAIL: $3 (stderr lacked '$2')" >&2; fail=$((fail+1)); fi; }
 

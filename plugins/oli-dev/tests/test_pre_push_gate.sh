@@ -8,10 +8,10 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 pass=0; fail=0
 # run gate, capture rc WITHOUT tripping any -e; usage: rc=$(gate_rc <json> [env assignments...])
-gate_rc() { json="$1"; shift; rc=0; printf '%s' "$json" | env "$@" sh "$GATE" >/dev/null 2>&1 || rc=$?; echo "$rc"; }
+gate_rc() { json="$1"; shift; rc=0; printf '%s' "$json" | env "$@" "${OLI_DEV_TEST_SHELL:-sh}" "$GATE" >/dev/null 2>&1 || rc=$?; echo "$rc"; }
 check() { if [ "$1" = "$2" ]; then pass=$((pass+1)); else echo "FAIL: $3 (got rc=$1, want $2)" >&2; fail=$((fail+1)); fi; }
 # captura só o stderr do gate (o run() ecoa ">> <cmd>" em stderr antes de executar)
-gate_err() { json="$1"; shift; printf '%s' "$json" | env "$@" sh "$GATE" 2>&1 >/dev/null; }
+gate_err() { json="$1"; shift; printf '%s' "$json" | env "$@" "${OLI_DEV_TEST_SHELL:-sh}" "$GATE" 2>&1 >/dev/null; }
 # fake uv: sempre sai 0 → deixa o gate compor+ecoar o cmd sem toolchain real
 mkdir -p "$TMP/bin"; printf '#!/bin/sh\nexit 0\n' > "$TMP/bin/uv"; chmod +x "$TMP/bin/uv"
 
