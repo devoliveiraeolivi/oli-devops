@@ -11,6 +11,13 @@ Fonte: seções `## Summary` e `## Pontas soltas / follow-ups` das PRs mergeadas
   a suíte do plugin deixou de ser local-only); condutor prefere EnterWorktree nativo e delega ao
   superpowers só onde a cobertura é real (caveat Windows/junction mantido no `finalize.md`).
 
+- **PR #17** (2026-07-02) — `oli-dev` tier `light` ativa `/ponytail lite` na Fase 0 (opcional,
+  fail-open): com o plugin ponytail presente, o ciclo light liga a pressão anti-over-engineering
+  ambiente automaticamente; `full` não toca; ausência anuncia e segue. Detecção autocontida,
+  evidência com rótulo `⚠️ não verificado`, README/comando documentam. **Trial validado pelo
+  usuário em 2026-07-02** ("testei e vale a pena") → integração mantida; nota temporária do
+  passo 7 removida no close-out.
+
 ## Follow-ups em aberto
 
 - [ ] **Reescrita python3 dos hooks do oli-dev** — deferida na PR #14. Gatilho explícito: um novo
@@ -25,5 +32,18 @@ Fonte: seções `## Summary` e `## Pontas soltas / follow-ups` das PRs mergeadas
       apenas quando surgir um 3º consumidor do mesmo padrão.
 - [ ] **Medir custo por ciclo do /oli-dev** — dado da PR #14 (tier full): ~2h wall-clock, ~900k
       tokens de subagentes (staff-review 48k; escrita TDD + task-reviews ~280k; code-review high
-      ~520k; fixer 77k). Coletar o mesmo dado nos próximos 2-3 ciclos (inclusive um `light`) para
-      decidir com evidência o default full vs. light.
+      ~520k; fixer 77k). **Dado da PR #17 (tier light, diff docs-only pequeno): ~350k tokens**
+      (staff-review Sonnet 49k; task-review 42k; code-review medium ~240k; fixer 75k) — indicativo,
+      diffs de tamanhos diferentes. Falta 1-2 ciclos light em fatia de código p/ decidir o default.
+- [ ] **Guard bloqueia `git push --delete` no finalize (falso-positivo)** — observado no finalize
+      da PR #17: o `branch-state-guard.sh` bloqueia qualquer `git push` com cwd numa branch MERGED,
+      inclusive o `git push origin --delete <branch>` que é exatamente a operação sancionada da
+      Fase 8. Contorno usado: deletar a partir do checkout principal (main). Fix candidato:
+      permitir `push --delete`/`push -d` da própria branch merged no guard (adição de caso, com
+      teste). Baixa urgência — o contorno é trivial e o finalize.md já orienta voltar pra main.
+- [ ] **Premissas do ponytail ainda não verificadas de forma independente** — o trial do usuário
+      validou o valor prático (2026-07-02), mas as duas premissas técnicas da nota removida seguem
+      sem verificação instrumentada: (a) a injeção ambiente alcançar os subagentes da Fase 4;
+      (b) o modo per-session não persistir entre sessões. Verificar oportunisticamente no próximo
+      ciclo light com ponytail ativo (perguntar a um writer se o ladder está no contexto dele;
+      checar `/ponytail` numa sessão nova) — se (a) for falso, reavaliar a integração.

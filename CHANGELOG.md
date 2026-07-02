@@ -6,6 +6,13 @@ follows strict [SemVer](policies/SEMVER.md).
 
 ## [Unreleased]
 
+### Changed
+
+- **`oli-dev` setup-gate passo 7**: removida a nota temporária do trial do ponytail — condição de
+  remoção cumprida (trial validado pelo usuário em 2026-07-02; resultado registrado em
+  `docs/project_notes/issues.md`). As premissas técnicas restantes (alcance nos subagentes;
+  persistência per-session) viraram follow-up instrumentado no mesmo arquivo.
+
 ## [v1.2.0] — 2026-07-02
 
 ### Security

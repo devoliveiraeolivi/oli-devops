@@ -38,7 +38,3 @@
      desligar: se o usuário o ligou globalmente por escolha própria, o ciclo não sobrescreve).
    - **tier=`light` + ausente** → anuncie ("ponytail ausente — seguindo sem pressão ambiente")
      e siga. Ausência NUNCA bloqueia o ciclo.
-   Nota TEMPORÁRIA (remova após registrar o resultado do 1º ciclo do trial em issues.md): duas
-   premissas do README ainda não verificadas — a injeção alcançar os subagentes da Fase 4, e o modo
-   per-session não persistir entre sessões. Observe ambas e registre o resultado como ponta solta
-   na PR.
