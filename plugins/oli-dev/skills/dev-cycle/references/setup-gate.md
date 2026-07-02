@@ -27,3 +27,16 @@
    agir. Se `light` tocar contrato/enforcement/superfície sensível → recomende `full` e peça
    **ack** explícito. No **resume** (spec+plano → Fase 4), leia o tier do cabeçalho do plano;
    ausente → `full` (fallback seguro).
+7. **Ponytail por tier (opcional, fail-open).** "Disponível" = o comando `/ponytail` aparece entre
+   os comandos/skills da sessão (mesmo mecanismo do passo 2); se a invocação responder comando
+   desconhecido/erro, trate como ausente. Ramos:
+   - **tier=`light` + disponível** → invoque `/ponytail lite`. **Evidência**: cole o output da
+     invocação ou, se não houver texto capturável, o de `/ponytail` sem argumento (reporta o
+     nível). Se nenhum produzir texto, anuncie "sem output capturável" e siga (registre na PR).
+   - **tier=`full`** → **não toque no ponytail** (não ligar ≠ desligar: se o usuário o ligou
+     globalmente por escolha própria, o ciclo não sobrescreve).
+   - **Ausente (qualquer tier)** → anuncie ("ponytail ausente — seguindo sem pressão ambiente")
+     e siga. Ausência NUNCA bloqueia o ciclo.
+   Nota (1º ciclo do trial): o alcance da injeção ambiente nos subagentes despachados (escritores
+   TDD da Fase 4) não está verificado — observe e registre o resultado como item em
+   `## Pontas soltas / follow-ups` da PR (Fase 7), que o close-out transcreve para `issues.md`.
