@@ -32,6 +32,10 @@ follows strict [SemVer](policies/SEMVER.md).
 
 ### Added
 
+- **`self-test.yml`: cobertura de CI para o plugin oli-dev** — job `shellcheck` passa a lintar
+  `plugins/oli-dev/{hooks,tests}/*.sh`, e novo job `plugin-tests` roda a suíte no ubuntu
+  (`/bin/sh` = dash + GNU sed): é o eixo de ambiente que o macOS local não cobre e por onde as
+  3 fugas históricas de portabilidade escaparam. A suíte do plugin deixa de ser local-only.
 - **`oli-dev` testes: matriz de shells nos testes de hook** (`OLI_DEV_TEST_SHELL`): os helpers
   `gate_rc`/`gate_err` passam a invocar o hook com o shell da matriz ({`sh`, `dash`}, via
   `run_all.sh`, skip anunciado se ausente) — o hook é exercitado sob cada shell, não o arquivo
