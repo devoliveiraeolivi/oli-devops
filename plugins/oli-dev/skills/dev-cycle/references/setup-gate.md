@@ -27,15 +27,18 @@
    agir. Se `light` tocar contrato/enforcement/superfície sensível → recomende `full` e peça
    **ack** explícito. No **resume** (spec+plano → Fase 4), leia o tier do cabeçalho do plano;
    ausente → `full` (fallback seguro).
-7. **Ponytail por tier (opcional, fail-open).** "Disponível" = `/ponytail` aparece na lista de
-   comandos/skills da sessão; invocação respondida com comando desconhecido/erro = ausente. Ramos:
+7. **Ponytail por tier (opcional, fail-open).** "Disponível" = o comando `/ponytail` aparece na
+   lista de skills/comandos da sessão (o system-reminder de skills disponíveis); se a invocação
+   responder comando desconhecido/erro, trate como ausente. Ramos:
    - **tier=`light` + disponível** → invoque `/ponytail lite` e cole o output. Sem texto capturável,
      tente `/ponytail` sem argumento (⚠️ "reporta o nível" segundo o README do plugin — não
-     verificado localmente); se nada produzir texto, anuncie e siga, registrando na PR.
+     verificado localmente); se nada produzir texto, anuncie e registre na PR como `⚠️ não verificado`
+     (princípio de evidência de `review-gates.md`) — e siga.
    - **tier=`full`** (ponytail presente ou ausente) → **não toque no ponytail** (não ligar ≠
      desligar: se o usuário o ligou globalmente por escolha própria, o ciclo não sobrescreve).
    - **tier=`light` + ausente** → anuncie ("ponytail ausente — seguindo sem pressão ambiente")
      e siga. Ausência NUNCA bloqueia o ciclo.
-   Nota do trial (1º ciclo light com ponytail ativo): duas premissas do README ainda não verificadas
-   — a injeção alcançar os subagentes da Fase 4, e o modo per-session não persistir entre sessões.
-   Observe ambas e registre o resultado como ponta solta na PR.
+   Nota TEMPORÁRIA (remova após registrar o resultado do 1º ciclo do trial em issues.md): duas
+   premissas do README ainda não verificadas — a injeção alcançar os subagentes da Fase 4, e o modo
+   per-session não persistir entre sessões. Observe ambas e registre o resultado como ponta solta
+   na PR.
