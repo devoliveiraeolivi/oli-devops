@@ -37,7 +37,7 @@ indisponível.
 | 1 | Formato do repo-destino | Marketplace guarda-chuva **`oli-plugins`**, mantendo o layout `plugins/oli-dev/` (não hoist para a raiz). Nasce como home de plugins futuros do ecossistema. |
 | 2 | Histórico git | **Preservar** via `git filter-repo` (blame/co-autoria/racional). O plugin mantém o path `plugins/oli-dev/` (sem rename); só os design docs são co-localizados sob o plugin. |
 | 3 | Cutover | **Big bang**: repo novo primeiro (histórico + CI verde + tag), depois um PR no `oli-devops` remove o plugin. Sem manutenção dupla. |
-| 4 | Versionamento | **Tag por plugin**: `oli-dev-v1.0.0`. Cada plugin versiona no seu `plugin.json`. Primeira release **v1.0.0** (plugin maduro e em uso, não v0.x). |
+| 4 | Versionamento | **Tag por plugin**: `oli-dev-v1.0.0` + GitHub release + CHANGELOG. O `plugin.json` fica **sem campo `version`** (invariante documentada: pinar versão obriga bump a cada mudança ou o `/plugin update` serve cache velho; sem versão ele segue o SHA — sempre fresco). Primeira release **v1.0.0** (plugin maduro; a tag/release carrega a versão, não o manifesto). |
 
 ## Repo novo `oli-plugins`
 
@@ -48,7 +48,7 @@ oli-plugins/
     marketplace.json            # name: "oli-plugins"; lista oli-dev, source ./plugins/oli-dev
   plugins/
     oli-dev/
-      .claude-plugin/plugin.json  # + "version": "1.0.0" (campo novo)
+      .claude-plugin/plugin.json  # SEM campo "version" (invariante: stale-cache)
       commands/  skills/  hooks/  tests/  evals/  README.md
       docs/superpowers/{specs,plans}/   # os 11 design docs do oli-dev, co-localizados
   .github/workflows/ci.yml        # shellcheck + suíte run_all.sh (o que sai do self-test do oli-devops)
@@ -78,13 +78,14 @@ O detalhamento exato dos comandos fica no plano de implementação.
 
 ### Fixups (o que quebra ao sair do `oli-devops`)
 - **`plugins/oli-dev/tests/test_manifests.sh` linha 22:** assert
-  `marketplace.name == "oli-devops"` → `"oli-plugins"`.
+  `marketplace.name == "oli-devops"` → `"oli-plugins"`. **É o único fixup do teste.**
 - **`test_manifests.sh` linha 5 (`ROOT=.../../../..`):** **não muda** — como
   mantemos `plugins/oli-dev/`, os 3 níveis (`tests`→`oli-dev`→`plugins`→raiz)
   continuam corretos.
+- **`test_manifests.sh` linha 28 (`assert "version" not in pj`):** **não muda** —
+  o `plugin.json` continua sem `version` (decisão 4). Não adicionar o campo.
 - **`plugins/oli-dev/README.md`:** `marketplace add devoliveiraeolivi/oli-devops`
   → `.../oli-plugins`.
-- **`plugins/oli-dev/.claude-plugin/plugin.json`:** adicionar `"version": "1.0.0"`.
 
 ### Versionamento (nova `SEMVER.md` do `oli-plugins`)
 SemVer por plugin, tag prefixada (`oli-dev-vX.Y.Z`):
