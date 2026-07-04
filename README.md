@@ -61,11 +61,17 @@ propagates bumps. See [policies/SEMVER.md](policies/SEMVER.md).
 
 Follow [docs/ONBOARDING.md](docs/ONBOARDING.md) step-by-step.
 
-## For AI agents (Claude)
+## Plugin de fluxo de desenvolvimento (mudou de casa)
 
-A dedicated skill `adopt-security-baseline` lives at
-`skills/adopt-security-baseline/` (added in v1.1.0 after Plan 2 pilot).
-The skill reflects the procedure in `docs/ONBOARDING.md`.
+O plugin `oli-dev` (maestro do ciclo de dev) vivia neste repo e **mudou-se**
+para o marketplace próprio
+[`devoliveiraeolivi/oli-plugins`](https://github.com/devoliveiraeolivi/oli-plugins),
+com histórico preservado e versionamento independente:
+
+```
+/plugin marketplace add devoliveiraeolivi/oli-plugins
+/plugin install oli-dev
+```
 
 ## Layout
 
@@ -76,7 +82,6 @@ templates/     # per-profile drop-in files
 policies/      # enforcement matrix, SemVer, exceptions format
 docs/          # onboarding, troubleshooting, release, adoption status
 tests/         # self-test fixtures
-skills/        # Claude Code skills (added in v1.1.0)
 ```
 
 ## Contributing

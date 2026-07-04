@@ -6,6 +6,24 @@ follows strict [SemVer](policies/SEMVER.md).
 
 ## [Unreleased]
 
+### Removed
+
+- **Plugin `oli-dev` extraído para o marketplace próprio
+  [`devoliveiraeolivi/oli-plugins`](https://github.com/devoliveiraeolivi/oli-plugins)**
+  (histórico preservado via `git filter-repo`; primeira release lá:
+  `oli-dev-v1.0.0`). Saem deste repo: `plugins/oli-dev/`,
+  `.claude-plugin/marketplace.json`, os 11 design docs `docs/superpowers/*oli-dev*`
+  (co-localizados no repo novo) e os jobs do plugin no `self-test.yml`
+  (`plugin-tests` + shellcheck de `plugins/`). Instalação agora:
+  `/plugin marketplace add devoliveiraeolivi/oli-plugins` + `/plugin install oli-dev`.
+  Racional: desacopla as duas cadências/públicos — release de segurança não versiona
+  mais mudança de plugin, e falha de teste do plugin não trava mais patch de CVE.
+  Ver `docs/superpowers/specs/2026-07-02-oli-plugins-split-design.md`.
+- **README: seção "For AI agents" removida** — alegava uma skill
+  `adopt-security-baseline` em `skills/` que nunca existiu no repo (o CHANGELOG
+  do v1.1.0 não a adicionou; o diretório nunca foi criado). Doc mentia; a
+  referência canônica de onboarding segue sendo `docs/ONBOARDING.md`.
+
 ### Fixed
 
 - **Templates `renovate.json`: habilita o manager `pre-commit`** (`"pre-commit":
