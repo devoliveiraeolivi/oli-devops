@@ -24,7 +24,7 @@ because only one of the two is auto-bumped today (see Propagation gaps).
 | oli-ops | js-docker | v1.1.1 | v1.1.1 | 🟢 | adopted; first js-docker consumer |
 | oli-vault | python-only | — | — | — | **not adopted** — greenfield, default branch `master`, no workflows yet |
 | anp-bi-etl | python-only | **v1.1.0** ⚠️ | v1.1.1 | 🟢 | adopted; pre-commit pin stale |
-| oli-etl | python-docker | — (CI only) | v1.1.1 | 🟢 | adopted early, outside the original plan; CI layer only, no pre-commit block |
+| oli-etl | python-docker | — (CI only) | **v1.2.0** | 🟢 | adopted early, outside the original plan; CI layer only, no pre-commit block. **First consumer on v1.2.0** (manual bump [#34](https://github.com/devoliveiraeolivi/oli-etl/pull/34), 2026-07-04; also gained `renovate.json`) |
 
 ## Propagation gaps (found 2026-07-02)
 
@@ -34,13 +34,20 @@ because only one of the two is auto-bumped today (see Propagation gaps).
    `github-actions` Renovate manager should open the bump PRs automatically
    (delayed by each repo's `minimumReleaseAge`). **Verify the PRs land by
    ~2026-07-10; if not, bump manually. Hard deadline 2026-09-16.**
+   *Status 2026-07-04:* oli-etl already on v1.2.0 (manual, #34); the other 5
+   are watched by a scheduled one-shot run on **2026-07-09** that opens manual
+   bumps if Renovate hasn't (spec in
+   `docs/project_notes/2026-07-04-handoff-loop-engineering.md`).
 2. **Pre-commit `rev:` pins are NOT auto-bumped.** Renovate's `pre-commit`
    manager is [disabled by default](https://docs.renovatebot.com/modules/manager/pre-commit/)
    and the template `renovate.json` never opted in — so the `rev:` pins have
    sat at their onboarding version for months (auth/scraper still on v1.0.0)
    while the CI pin moved. The template is fixed as of the PR that added this
-   note; **existing consumers still need their own `renovate.json` patched**
-   (add `"pre-commit": {"enabled": true}`) or a one-off manual bump.
+   note. **Resolved 2026-07-04:** backfill merged in all 5 consumers with a
+   pre-commit config (oli-auth#43, oli-scraper#328, oli-ops#65,
+   oli-gateway#164, anp-bi-etl#20) and oli-etl gained a `renovate.json` via
+   #34 — expect Renovate `rev:` bump PRs from ~07-07 (`minimumReleaseAge`);
+   the stale-pin ⚠️ rows above clear as those merge.
 
 ## Phase 2 (planned)
 
