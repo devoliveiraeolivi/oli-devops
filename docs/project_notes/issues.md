@@ -41,6 +41,17 @@ Fonte: seções `## Summary` e `## Pontas soltas / follow-ups` das PRs mergeadas
       Fase 8. Contorno usado: deletar a partir do checkout principal (main). Fix candidato:
       permitir `push --delete`/`push -d` da própria branch merged no guard (adição de caso, com
       teste). Baixa urgência — o contorno é trivial e o finalize.md já orienta voltar pra main.
+- [ ] **Loop agendado de verificação Renovate/gitleaks-action** — handoff completo (spec do loop,
+      fatos verificados, prazos) em [2026-07-04-handoff-loop-engineering.md](2026-07-04-handoff-loop-engineering.md).
+      Hard deadline 2026-09-16. O mesmo handoff registra os não-fazer da avaliação do paper
+      arXiv 2607.00038 (não mudar a skill `dev-cycle` — que agora vive no repo `oli-plugins`).
+      **Execução 2026-07-04 (primeira):** 6/6 consumers ainda pinam `@v1.1.1`; zero bump-PRs do
+      Renovate abertos — dentro do esperado (`minimumReleaseAge: 5d` sobre a tag de 07-02 →
+      ação a partir de ~07-07). `oli-etl` sem `renovate.json` → regra de parada (b) aplicada
+      desde já: bump manual + renovate.json em
+      [oli-etl#34](https://github.com/devoliveiraeolivi/oli-etl/pull/34). **Próxima execução:
+      one-shot agendado 2026-07-09**; se nenhum bump-PR do Renovate até lá → bump manual nos
+      5 restantes (mesmo padrão do #34).
 - [ ] **Premissas do ponytail ainda não verificadas de forma independente** — o trial do usuário
       validou o valor prático (2026-07-02), mas as duas premissas técnicas da nota removida seguem
       sem verificação instrumentada: (a) a injeção ambiente alcançar os subagentes da Fase 4;
