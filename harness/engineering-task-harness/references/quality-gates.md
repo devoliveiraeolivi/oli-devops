@@ -2,6 +2,17 @@
 
 Cada gate tem um gatilho observável. Gatilho presente, gate obrigatório. Gate não executado entra no handoff com o motivo.
 
+## Gate 0 — Decisão registrada
+
+Gatilho: houve discussão de desenho, arquitetura ou alternativas.
+
+1. Grave na spec (onde a regra de docs do repo mandar) uma lista numerada: o que foi decidido, o que fica fora e o tamanho previsto (componentes, arquivos).
+2. O usuário confirma esse texto antes de qualquer código. Sem confirmação, não há implementação.
+3. A implementação começa numa sessão nova, a partir da lista, e não do contexto compactado da discussão.
+4. Mudar uma decisão, no código ou na spec, exige parar e pedir aprovação: o quê, por quê, custo. Com o sim, atualize a lista. Nunca reescreva a spec para justificar o que foi construído.
+
+Por quê: no oli-indexador#232, a decisão (coordenador único, journal, sem síntese) ficou só no chat. Depois de 19 compactações, o agente implementou outra arquitetura (segmentos, síntese, reconciliação) e reescreveu a spec 0005 dentro do próprio PR para descrevê-la.
+
 ## Gate 1 — Premissas conferidas
 
 Gatilho: a mudança ou a spec depende de afirmação sobre o estado atual (código, schema, dados, configuração, comportamento em produção).
@@ -10,7 +21,7 @@ Gatilho: a mudança ou a spec depende de afirmação sobre o estado atual (códi
 2. Entregue só a lista a um agente em contexto novo, sem sua conclusão. Ele marca cada premissa como `confirmada`, `derrubada` ou `sem evidência`, citando `arquivo:linha`.
    - Claude: subagente (Explore para leitura ampla).
    - Codex: subagente ou sessão nova.
-3. Premissa derrubada ou sem evidência volta para a spec antes do código.
+3. Premissa derrubada ou sem evidência volta para a spec antes do código. Se isso mudar uma decisão já confirmada (Gate 0), o usuário aprova de novo.
 
 Por quê: conferir a spec 0005 do oli-indexador contra o código achou 6 premissas erradas. É o gate que mais rende.
 
@@ -25,15 +36,25 @@ Gatilho: a mudança altera comportamento (não só docs ou configuração sem ef
 
 Por quê: escritores de teste delegados sem revisão produziram testes que espelhavam as suposições de quem implementou.
 
-## Gate 3 — Revisão do diff em contexto novo
+## Gate 3 — Conformidade, depois bugs, em contexto novo
 
 Gatilho: há diff para PR.
 
-- Claude: `/code-review` em nível high (medium se o diff for só docs).
-- Segundo par, o outro agente:
-  - numa sessão Claude, rode `codex review --base origin/main`;
-  - numa sessão Codex, peça `/code-review` high numa sessão Claude.
-- Confirme cada achado no código antes de aceitar ou rejeitar. Registre os rejeitados com o motivo.
+1. Conformidade primeiro. Um agente em contexto novo recebe a lista do Gate 0 e o diff, e responde: implementa exatamente a lista? O que sobra? O que falta? Componente, fase ou abstração fora da lista, ou mudança na lista ou na spec sem aprovação do usuário, é bloqueio. O que falta entra no handoff.
+2. Depois, bugs:
+   - Claude: `/code-review` em nível high (medium se o diff for só docs).
+   - Segundo par, o outro agente: numa sessão Claude, `codex review --base origin/main`; numa sessão Codex, `/code-review` high numa sessão Claude.
+3. Confirme cada achado no código antes de aceitar ou rejeitar. Registre os rejeitados com o motivo.
+
+Por quê: no #232, a revisão de bug achou vários P1 dentro da arquitetura errada, e nenhuma perguntou se ela era a combinada.
+
+## Disjuntor
+
+Gatilho: segunda rodada de revisão (depois de corrigir a primeira) ainda com achado P0/P1, ou diff maior que o dobro do tamanho previsto no Gate 0.
+
+Pare. Não siga consertando. Reporte ao usuário o que foi decidido, o que foi feito, onde divergiu e as opções. Rodadas seguidas de P1 costumam indicar desenho errado, não bug isolado.
+
+Por quê: no #232, foram 6 P1 no primeiro review e mais 3 depois das correções, horas consolidando uma máquina que ninguém pediu.
 
 ## Gate 4 — Dado real antes de números
 

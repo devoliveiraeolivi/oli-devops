@@ -60,6 +60,7 @@ def main() -> int:
         f"itens_sujos={dirty}; git_common_dir={common}. "
         "Antes de escrever, classifique a task (review, spec, feature ou debug); review começa "
         "somente leitura; feature e correção vão para worktree dedicada. "
+        "Siga a decisão registrada na spec (Gate 0); fora dela, pare e pergunte. "
         "Antes do código: premissas sobre o estado atual com arquivo:linha, conferidas por agente "
         "em contexto novo; invariantes viram testes que falham primeiro. "
         "Nunca remova worktree ou branch só por estar clean, detached ou upstream gone: audite "

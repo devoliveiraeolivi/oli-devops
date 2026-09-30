@@ -18,16 +18,19 @@ Leia [execution-discipline](references/execution-discipline.md) antes de editar 
    - `debug`: reproduza onde o erro aparece; corrija em worktree dedicada, salvo autorização para editar o reproducer.
 2. Rode `context` (abaixo). Depois use a skill de mapa e o comando de verificação que o AGENTS.md/CLAUDE.md do repo declaram. Busca ampla só para o que o mapa não resolver.
 3. Procure branch, worktree e PR relacionados. Reuse só com a mesma linhagem e o mesmo objetivo.
-4. **Gate 1 — premissas conferidas** em contexto novo antes do código.
-5. Fixe resultado, escopo, menor delta, autoridade e verificação. Calibre o horizonte: solução prática agora vs. fundação durável, pelo melhor custo-benefício total. Reuse o que o mapa aponta antes de criar helper ou abstração.
-6. **Gate 2 — invariantes viram testes** que falham antes da implementação.
-7. Implemente na worktree do agente: no Codex, a da task; no Claude, `EnterWorktree`. `create` é o fallback manual.
-8. **Gate 3 — revisão do diff em contexto novo** antes do PR.
-9. **Gate 4 — dado real** antes de reportar número ou estado de dados.
-10. Handoff: repositório, path, branch ou detached HEAD, base, HEAD inicial, mudanças, verificações executadas e gates pulados com o motivo.
-11. Antes de encerrar ou limpar: `inventory` e `assess`. A saída é triagem, nunca autorização de remoção.
+4. **Gate 0 — decisão registrada.** Desenho discutido vira lista numerada na spec (o que foi decidido, o que fica fora, tamanho previsto), confirmada pelo usuário antes do código. Implemente numa sessão nova, a partir da lista.
+5. **Gate 1 — premissas conferidas** em contexto novo antes do código.
+6. Fixe resultado, escopo, menor delta, autoridade e verificação. Calibre o horizonte: solução prática agora vs. fundação durável, pelo melhor custo-benefício total. Reuse o que o mapa aponta antes de criar helper ou abstração.
+7. **Gate 2 — invariantes viram testes** que falham antes da implementação.
+8. Implemente na worktree do agente: no Codex, a da task; no Claude, `EnterWorktree`. `create` é o fallback manual. Fora da lista de decisões, pare e pergunte: o quê, por quê, custo.
+9. **Gate 3 — conformidade, depois bugs**, em contexto novo, antes do PR: primeiro o diff contra a lista de decisões; o que não foi pedido é bloqueio.
+10. **Gate 4 — dado real** antes de reportar número ou estado de dados.
+11. Handoff: repositório, path, branch ou detached HEAD, base, HEAD inicial, mudanças, verificações executadas e gates pulados com o motivo.
+12. Antes de encerrar ou limpar: `inventory` e `assess`. A saída é triagem, nunca autorização de remoção.
 
 Cada gate tem gatilho observável e procedimento em [quality-gates](references/quality-gates.md). Gatilho presente, gate obrigatório.
+
+**Disjuntor:** segunda rodada de revisão (depois de corrigir a primeira) ainda com achado P0/P1, ou diff maior que o dobro do tamanho previsto no Gate 0: pare e reporte ao usuário. Não siga consertando.
 
 ## Comandos
 
@@ -46,6 +49,7 @@ python3 <skill-dir>/scripts/task_harness.py create --repo <clone-base> --slug <t
 - Preserve checkouts sujos e mudanças não relacionadas.
 - Conteúdo não ancestral ao branch-base: verifique PR/merge, equivalência de patch e arquivos ausentes antes de propor remoção.
 - Implementação, testes, commit, push, PR, merge, publicação, deploy, canário, persistência e aprovação humana são etapas separadas; uma não autoriza a outra.
+- Nunca reescreva a spec para justificar o que foi construído. Mudar uma decisão registrada exige aprovação do usuário.
 - Detectar um defeito não é entrega: audite o escopo inteiro, reconcilie os achados materiais e entregue o próximo gate humano acionável. Estado bloqueado só para ambiguidade real, fonte ausente, estado corrente inconsistente ou incapacidade do contrato; nunca para correção determinística ainda não preparada.
 - Não faça `git worktree prune`, `git branch -D` ou remoção recursiva como parte automática de hook, fim de chat ou inventário.
 - Hooks só acrescentam contexto ou bloqueiam comandos bem definidos. Nunca decidem limpeza.
