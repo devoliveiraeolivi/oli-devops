@@ -85,6 +85,8 @@ class SessionContextTest(unittest.TestCase):
         self.assertIn("engineering-task-harness", context)
         self.assertIn("tipo=base-checkout", context)
         self.assertIn("arquivo:linha", context)
+        # Reinjetado após cada compactação: a decisão registrada não se perde no resumo.
+        self.assertIn("fora dela, pare e pergunte", context)
 
     def test_silent_outside_git(self) -> None:
         outside = self.root / "plain"

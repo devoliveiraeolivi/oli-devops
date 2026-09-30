@@ -44,7 +44,8 @@ Tratar como sensíveis:
 - contrato público, schema persistido ou migração;
 - autenticação, autorização, cobrança, segredo ou permissão;
 - configuração raiz, deploy ou infraestrutura com impacto externo;
-- ampliação material de escopo ou custo não implicada pela task.
+- ampliação material de escopo ou custo não implicada pela task;
+- desvio da decisão registrada (Gate 0): componente, fase ou abstração fora da lista, ou mudança na própria lista.
 
 Não pedir autoridade adicional quando a mudança estiver claramente pedida ou for consequência necessária e reversível do pedido. Quando faltar autoridade, parar antes da mutação, identificar a decisão material e apresentar somente opções reais com seus impactos. Gates específicos do projeto prevalecem e permanecem separados; implementação, commit, push, PR, merge, publicação, deploy, persistência e aprovação não se autorizam mutuamente.
 
