@@ -76,7 +76,8 @@ check_branch() {
       echo "harness guard: 'gh' ausente — anti-órfão não checado (fail-open)." >&2
       return 0
     fi
-    state="$(cd "$1" 2>/dev/null && gh pr view "$2" --json state -q .state 2>/dev/null || true)"
+    # Sem `set -e`: cd ou gh falhando deixam state vazio (fail-open abaixo).
+    state="$(cd "$1" 2>/dev/null && gh pr view "$2" --json state -q .state 2>/dev/null)"
   fi
   state="$(printf '%s' "$state" | tr -d '[:space:]')"
 
