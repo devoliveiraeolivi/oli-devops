@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Block accidental raw Git/worktree cleanup from Codex shell tool calls."""
+"""Block accidental raw Git/worktree cleanup from agent shell tool calls (Codex and Claude Code)."""
 
 from __future__ import annotations
 
 import json
+import os
 import re
+import shlex
 import sys
 from typing import Any
 
@@ -16,27 +18,142 @@ RULES: tuple[tuple[re.Pattern[str], str], ...] = (
         "remoção ou prune de worktree",
     ),
     (
-        re.compile(r"\bgit\b[^\n;&|]*\bbranch\s+(?:-[dD]\b|--delete\b)", re.IGNORECASE),
+        re.compile(r"\bgit\b[^\n;&|]*\bbranch\b[^\n;&|]*\s(?:-[dD]|--delete)\b", re.IGNORECASE),
         "remoção de branch local",
     ),
     (
-        re.compile(r"\bgit\b[^\n;&|]*\bpush\b[^\n;&|]*\s--delete\b", re.IGNORECASE),
+        re.compile(
+            r"\bgit\b[^\n;&|]*\bpush\b[^\n;&|]*\s(?:--delete\b|-d\b|--prune\b|--mirror\b|\+?:[\w./-]+)",
+            re.IGNORECASE,
+        ),
         "remoção de branch remota",
     ),
 )
 
-RM_RF = re.compile(r"\brm\s+-(?:[A-Za-z]*r[A-Za-z]*f|[A-Za-z]*f[A-Za-z]*r)\b")
-PROTECTED_ROOTS = ("/Documents/GitHub/", "/.codex/worktrees/", "/private/tmp/oli-")
+# `rm` como palavra de comando (não `--rm` do docker); flags recursiva e forçada em qualquer ordem.
+RM = re.compile(r"(?<![\w-])rm\b([^\n;&|]*)")
+RECURSIVE = re.compile(r"\s(?:-[A-Za-z]*[rR][A-Za-z]*|--recursive)\b")
+FORCE = re.compile(r"\s(?:-[A-Za-z]*f[A-Za-z]*|--force)\b")
+# A raiz em si e qualquer descendente (não `GitHubBackup`).
+PROTECTED_ROOT = re.compile(
+    r"/Documents/GitHub(?![\w.-])|/\.codex/worktrees(?![\w.-])|/private/tmp/oli-"
+)
+
+# Texto entre aspas e corpo de heredoc contam como comando (conservador: `bash -c`, ssh,
+# pipe para shell, interpretador). Exceção só para contextos de dado conhecidos: mensagem ou
+# corpo de commit/PR/release, padrão de busca e heredoc que só grava arquivo (cat/tee).
+DATA_FLAG = re.compile(r"-[A-Za-z]*m|--(?:message|body|title|notes|subject|grep)")
+DATA_ASSIGNMENT = re.compile(r"--(?:message|body|title|notes|subject|grep)=")
+SEARCH_COMMANDS = {"grep", "egrep", "fgrep", "rg", "ag", "ack"}
+WRITER_HEREDOC = re.compile(
+    r"((?:^|[;&|(\n])[ \t]*(?:cat|tee)\b[^\n]*?)"
+    r"<<-?[ \t]*(['\"]?)([A-Za-z_]\w*)\2([^\n]*)\n((?:.*?\n)?)[ \t]*\3[ \t]*(?=\n|$)",
+    re.DOTALL,
+)
+SUBSTITUTION = re.compile(r"\$\([^()]*\)|`[^`]*`")
+OPERATORS = {"&&", "||", ";", "|", "&"}
+ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=")
+# O bypass só vale como atribuição no início do próprio comando, nunca em comentário ou mensagem.
+LEADING_BYPASS = re.compile(r"\s*(?:[A-Za-z_]\w*=\S*\s+)*" + re.escape(BYPASS) + r"\s")
 
 
-def block_reason(command: str) -> str | None:
-    if BYPASS in command:
+def strip_writer_heredoc(match: re.Match[str]) -> str:
+    kept = match.group(1) + "<<" + match.group(3) + match.group(4)
+    if not match.group(2):  # delimitador sem aspas: o shell executa $(...) e `...` do corpo
+        kept += "".join("\n" + found for found in SUBSTITUTION.findall(match.group(5)))
+    return kept
+
+
+def is_data(token: str, words: list[str]) -> bool:
+    if "$(" in token or "`" in token:
+        return False  # substituição de comando executa mesmo dentro de mensagem ou busca
+    previous = words[-1] if words else ""
+    return bool(
+        DATA_FLAG.fullmatch(previous)
+        or DATA_ASSIGNMENT.match(token)
+        or any(os.path.basename(word) in SEARCH_COMMANDS for word in words)
+    )
+
+
+def scan_segments(command: str) -> list[tuple[str, bool]] | None:
+    """Cada comando (segmento) sem os trechos só de dado, e se ele começa com o bypass.
+
+    Retorna None quando o comando não é tokenizável.
+    """
+    command = WRITER_HEREDOC.sub(strip_writer_heredoc, command)
+    command = command.replace("\\\n", " ")
+    try:
+        lexer = shlex.shlex(command.replace("\n", " ; "), posix=True, punctuation_chars=True)
+        lexer.whitespace_split = True
+        lexer.commenters = ""  # comentário também é escaneado (conservador)
+        tokens = list(lexer) + [";"]
+    except ValueError:
         return None
+    segments: list[tuple[str, bool]] = []
+    words: list[str] = []
+    kept: list[str] = []
+    for token in tokens:
+        if token in OPERATORS:
+            if words:
+                leading = []
+                for word in words:
+                    if not ASSIGNMENT.match(word):
+                        break
+                    leading.append(word)
+                segments.append((" ".join(kept), BYPASS in leading))
+            words, kept = [], []
+            continue
+        # Token com espaço só existe se veio entre aspas (ou escapado).
+        if not (any(char.isspace() for char in token) and is_data(token, words)):
+            kept.append(token)
+        words.append(token)
+    return segments
+
+
+def resolve_operand(operand: str, cwd: str | None) -> str | None:
+    if any(char in operand for char in "$`*?["):
+        return None  # depende de expansão: fica com a checagem pelo texto
+    path = os.path.expanduser(operand)
+    if not os.path.isabs(path):
+        if cwd is None:
+            return None
+        path = os.path.join(cwd, path)
+    return os.path.normpath(path)  # lexical: `rm` de um symlink não apaga o alvo
+
+
+def protected(path: str) -> bool:
+    """Raiz protegida, ancestral dela, ou raiz de repo/worktree dentro dela."""
+    codex_home = os.environ.get("CODEX_HOME", os.path.expanduser("~/.codex"))
+    for root in (os.path.expanduser("~/Documents/GitHub"), os.path.join(codex_home, "worktrees")):
+        if path == root or root.startswith(path.rstrip("/") + "/"):
+            return True
+    return bool(PROTECTED_ROOT.search(path)) and os.path.lexists(os.path.join(path, ".git"))
+
+
+def rule_violation(text: str, command: str, cwd: str | None) -> str | None:
     for pattern, label in RULES:
-        if pattern.search(command):
+        if pattern.search(text):
             return label
-    if RM_RF.search(command) and any(root in command for root in PROTECTED_ROOTS):
-        return "rm recursivo em raiz usada por repositórios ou worktrees"
+    for match in RM.finditer(text):
+        args = match.group(1)
+        if not (RECURSIVE.search(args) and FORCE.search(args)):
+            continue
+        paths = [resolve_operand(arg, cwd) for arg in args.split() if not arg.startswith("-")]
+        if PROTECTED_ROOT.search(command) or any(path and protected(path) for path in paths):
+            return "rm recursivo em raiz usada por repositórios ou worktrees"
+    return None
+
+
+def block_reason(command: str, cwd: str | None = None) -> str | None:
+    segments = scan_segments(command)
+    if segments is None:  # não tokenizável: texto cru, como antes
+        if LEADING_BYPASS.match(command):
+            return None
+        segments = [(command, False)]
+    for text, bypassed in segments:
+        reason = None if bypassed else rule_violation(text, command, cwd)
+        if reason:
+            return reason
     return None
 
 
@@ -53,7 +170,8 @@ def main() -> int:
         payload = json.load(sys.stdin)
     except (json.JSONDecodeError, OSError):
         return 0
-    reason = block_reason(command_from(payload))
+    cwd = payload.get("cwd") if isinstance(payload.get("cwd"), str) else os.getcwd()
+    reason = block_reason(command_from(payload), cwd)
     if not reason:
         return 0
     message = (

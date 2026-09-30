@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Emit concise Git/worktree context for a Codex SessionStart hook."""
+"""Emit concise Git/worktree context for a SessionStart hook (Codex and Claude Code)."""
 
 from __future__ import annotations
 
@@ -19,6 +19,17 @@ def git(cwd: Path, *args: str) -> str | None:
         timeout=5,
     )
     return result.stdout.strip() if result.returncode == 0 else None
+
+
+def worktree_kind(root: Path) -> str:
+    codex_root = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex"))).resolve()
+    if codex_root / "worktrees" in root.parents:
+        return "codex-managed"
+    if root.parent.name == "worktrees" and root.parent.parent.name == ".claude":
+        return "claude-managed"
+    if (root / ".git").is_dir():
+        return "base-checkout"
+    return "linked-worktree"
 
 
 def main() -> int:
@@ -42,23 +53,17 @@ def main() -> int:
     if not common.is_absolute():
         common = (root / common).resolve()
 
-    codex_root = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex"))).resolve()
-    if codex_root / "worktrees" in root.parents:
-        kind = "codex-managed"
-    elif (root / ".git").is_dir():
-        kind = "base-checkout"
-    else:
-        kind = "linked-worktree"
-
     context = (
-        "Engineering task harness ativo. Antes de qualquer escrita, classifique a task como "
-        "review, spec, feature ou debug e aplique a política da skill engineering-task-harness. "
-        f"Contexto Git atual: root={root}; tipo={kind}; branch={branch}; HEAD={head}; "
+        "Engineering task harness ativo: use a skill engineering-task-harness; ela prevalece "
+        "sobre fluxos genéricos de skills. "
+        f"Contexto Git: root={root}; tipo={worktree_kind(root)}; branch={branch}; HEAD={head}; "
         f"itens_sujos={dirty}; git_common_dir={common}. "
-        "Review deve começar somente leitura. Feature e persistência de spec usam ambiente dedicado; "
-        "debug pode reproduzir no ambiente existente, mas a correção não deve misturar mudanças alheias. "
-        "Nunca remova/prune worktree ou branch com base apenas em status clean, detached ou upstream gone; "
-        "audite linhagem, PR/equivalência e obtenha autorização explícita para a lista exata."
+        "Antes de escrever, classifique a task (review, spec, feature ou debug); review começa "
+        "somente leitura; feature e correção vão para worktree dedicada. "
+        "Antes do código: premissas sobre o estado atual com arquivo:linha, conferidas por agente "
+        "em contexto novo; invariantes viram testes que falham primeiro. "
+        "Nunca remova worktree ou branch só por estar clean, detached ou upstream gone: audite "
+        "linhagem e PR e peça autorização para a lista exata."
     )
     print(
         json.dumps(

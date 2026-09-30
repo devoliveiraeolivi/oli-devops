@@ -11,6 +11,14 @@ This is the **centralized security baseline** for all OLI repos. Changes
 here propagate to ~5 consumer repos (Phase 1) and ~15+ more (Phase 2+).
 Every change is high-leverage and every bug is amplified.
 
+### Exception: `harness/` is a separate product
+
+`harness/` holds the engineering harness shared by Claude Code and Codex
+(skill `engineering-task-harness` + its hooks). It is **not** part of the
+security baseline: the golden rules below (tag, SemVer, CHANGELOG) apply to
+the baseline only. `harness/` has no tags, no root CHANGELOG entries and its
+own CI (`.github/workflows/harness.yml`). See [harness/README.md](harness/README.md).
+
 ## Golden rules
 
 1. **NEVER** tag a release without self-test CI green. No exceptions.
@@ -38,6 +46,7 @@ Every change is high-leverage and every bug is amplified.
 | `docs/ONBOARDING.md` | Master procedure; skill (Plan 2) reflects this |
 | `docs/RELEASE.md` | Release checklist |
 | `tests/fixtures/` | Self-test fixtures — keep realistic and current |
+| `harness/` | Engineering harness — separate cadence, not the baseline |
 
 ## How to make changes
 

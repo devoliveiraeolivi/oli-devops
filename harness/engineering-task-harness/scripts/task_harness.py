@@ -10,7 +10,7 @@ import re
 import shutil
 import subprocess
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -44,6 +44,8 @@ def worktree_kind(root: Path) -> str:
     codex_home = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex"))).resolve()
     if codex_home / "worktrees" in root.parents:
         return "codex-managed"
+    if root.parent.name == "worktrees" and root.parent.parent.name == ".claude":
+        return "claude-managed"
     if (root / ".git").is_dir():
         return "base-checkout"
     return "linked-worktree"
@@ -74,7 +76,7 @@ def commit_age_days(path: Path, head: str) -> int | None:
     value = git_text(path, "show", "-s", "--format=%ct", head)
     if not value:
         return None
-    return max(0, int((datetime.now(UTC).timestamp() - int(value)) // 86400))
+    return max(0, int((datetime.now(timezone.utc).timestamp() - int(value)) // 86400))
 
 
 def is_ancestor(path: Path, head: str, base: str) -> bool | None:
@@ -101,10 +103,8 @@ def parse_worktrees(repo: Path) -> list[dict[str, Any]]:
                 current = {}
             continue
         key, _, value = line.partition(" ")
-        if key in {"detached", "bare"}:
-            current[key] = True
-        else:
-            current[key] = value
+        # `locked`/`prunable` podem vir sem motivo: a presença da linha já é o sinal.
+        current[key] = value or True
     return entries
 
 
@@ -202,6 +202,10 @@ def assess_entry(
         classification = "PRESERVAR_CLONE_BASE"
     elif not exists or entry.get("prunable"):
         classification = "METADADO_PODAVEL_REQUER_AUDITORIA"
+    elif dirty_count is None:
+        classification = (
+            "PRESERVAR_LOCKED" if entry.get("locked") else "REVISAR_STATUS_DESCONHECIDO"
+        )
     elif dirty_count:
         classification = "PRESERVAR_DIRTY"
     elif entry.get("locked"):
@@ -217,7 +221,10 @@ def assess_entry(
 
     github_prs = github_by_branch.get(branch, []) if github_by_branch is not None and branch else []
     if github_by_branch is not None:
-        classification = classify_with_github(classification, github_prs)
+        if github_error and classification == "CANDIDATA_MERGEADA":
+            classification = "REVISAR_GITHUB_INDISPONIVEL"
+        else:
+            classification = classify_with_github(classification, github_prs)
 
     return {
         "path": str(path),

@@ -1,4 +1,4 @@
 interface:
   display_name: "Engineering Task Harness"
   short_description: "Organiza execução, worktrees e gates de engenharia."
-  default_prompt: "Use $engineering-task-harness para classificar a task, inspecionar o checkout e conduzir escopo, evidência, validação e handoff com segurança."
+  default_prompt: "Use $engineering-task-harness para classificar a task, conferir premissas e conduzir testes, revisão e handoff com evidência."

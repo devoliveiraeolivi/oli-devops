@@ -2,7 +2,7 @@
 
 ## Divisão de autoridade
 
-- **Codex hooks:** contexto e prevenção de acidentes durante a sessão.
+- **Hooks do agente (Codex e Claude):** contexto e prevenção de acidentes durante a sessão.
 - **Git hooks locais:** feedback rápido antes de commit/push; não são autoridade porque não são distribuídos automaticamente e podem ser ignorados com `--no-verify`.
 - **CI:** validação reproduzível do SHA publicado.
 - **GitHub rulesets:** bloqueio central de merge, force-push e exclusão.

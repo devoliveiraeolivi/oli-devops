@@ -38,6 +38,13 @@ class TaskHarnessTest(unittest.TestCase):
         self.assertEqual(result["dirty_count"], 0)
         self.assertEqual(result["branch"], "main")
 
+    def test_context_identifies_claude_managed_worktree(self) -> None:
+        worktree = self.root / "repo-claude" / ".claude" / "worktrees" / "feature"
+        command(
+            "git", "-C", str(self.repo), "worktree", "add", "-b", "feature", str(worktree), "main"
+        )
+        self.assertEqual(HARNESS.context(worktree)["kind"], "claude-managed")
+
     def test_dirty_linked_worktree_is_preserved(self) -> None:
         worktree = self.root / "feature"
         command(
@@ -66,6 +73,40 @@ class TaskHarnessTest(unittest.TestCase):
         )
         self.assertEqual(item["classification"], "CANDIDATA_MERGEADA")
         self.assertTrue(item["head_merged_in_base"])
+
+    def add_merged_worktree(self) -> Path:
+        worktree = self.root / "feature"
+        command(
+            "git", "-C", str(self.repo), "worktree", "add", "-b", "feature", str(worktree), "main"
+        )
+        return worktree
+
+    def classify(self, worktree: Path) -> str:
+        inventory = HARNESS.repo_inventory(self.repo, "main")
+        item = next(
+            item for item in inventory["worktrees"] if item["path"] == str(worktree.resolve())
+        )
+        return item["classification"]
+
+    def test_locked_worktree_without_reason_is_preserved(self) -> None:
+        worktree = self.add_merged_worktree()
+        command("git", "-C", str(self.repo), "worktree", "lock", str(worktree))
+        self.assertEqual(self.classify(worktree), "PRESERVAR_LOCKED")
+
+    def test_unreadable_status_requires_review(self) -> None:
+        worktree = self.add_merged_worktree()
+        (worktree / ".git").write_text("gitdir: /nonexistent\n", encoding="utf-8")
+        self.assertEqual(self.classify(worktree), "REVISAR_STATUS_DESCONHECIDO")
+
+    def test_github_failure_downgrades_cleanup_candidate(self) -> None:
+        worktree = self.add_merged_worktree()
+        entry = next(
+            entry
+            for entry in HARNESS.parse_worktrees(self.repo)
+            if Path(entry["worktree"]).resolve() == worktree.resolve()
+        )
+        item = HARNESS.assess_entry(self.repo, entry, "main", {}, "gh indisponível")
+        self.assertEqual(item["classification"], "REVISAR_GITHUB_INDISPONIVEL")
 
     def test_open_pr_preserves_worktree_even_if_locally_merged(self) -> None:
         classification = HARNESS.classify_with_github(
