@@ -28,7 +28,7 @@ ln -s "$H" ~/.claude/skills/engineering-task-harness   # Claude Code
 | Evento | Script | Papel |
 |---|---|---|
 | SessionStart | `scripts/session_context.py` | contexto Git + lembrete dos gates |
-| PreToolUse (Bash) | `scripts/git_guard.py` | bloqueia remoção crua de worktree/branch e `rm -rf` em raiz de repo |
+| PreToolUse (Bash) | `scripts/git_guard.py` | bloqueia remoção de worktree, exclusão forçada (`-D`) ou remota de branch e `rm -rf` em raiz de repo |
 | PreToolUse (Bash) | `scripts/pre-push-gate.sh` | roda a verificação do repo no `git push` (na dúvida, libera; o CI valida o SHA) |
 | PreToolUse (Bash) | `scripts/branch-state-guard.sh` | bloqueia commit/push de branch com PR mergeado |
 

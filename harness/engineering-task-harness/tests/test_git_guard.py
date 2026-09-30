@@ -52,7 +52,7 @@ class GitGuardTest(unittest.TestCase):
         self.assertIsNotNone(GUARD.block_reason(command))
 
     def test_blocks_through_xargs(self) -> None:
-        self.assertIsNotNone(GUARD.block_reason("git branch --merged | xargs git branch -d"))
+        self.assertIsNotNone(GUARD.block_reason("git branch --merged | xargs git branch -D"))
 
     def test_blocks_inside_shell_payload(self) -> None:
         self.assertIsNotNone(GUARD.block_reason('bash -lc "git worktree remove /repo-wt"'))
@@ -134,9 +134,31 @@ class GitGuardTest(unittest.TestCase):
         self.assertIsNotNone(GUARD.block_reason("git push --prune origin 'refs/heads/*:refs/heads/*'"))
         self.assertIsNotNone(GUARD.block_reason("git push --mirror backup"))
 
-    def test_blocks_branch_delete_after_other_options(self) -> None:
-        self.assertIsNotNone(GUARD.block_reason("git branch --merged main -d old"))
+    def test_blocks_forced_branch_delete_after_other_options(self) -> None:
+        self.assertIsNotNone(GUARD.block_reason("git branch --merged main -D old"))
         self.assertIsNone(GUARD.block_reason("git branch --merged main"))
+
+    def test_allows_safe_branch_delete(self) -> None:
+        # `-d` só apaga branch já mergeada: o próprio git recusa o resto.
+        for command in (
+            "git branch -d feat/x",
+            "git branch --merged main -d old",
+            "git branch --merged | xargs git branch -d",
+            "git -C /repo branch --delete feat/x",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNone(GUARD.block_reason(command))
+
+    def test_blocks_every_forced_branch_delete_form(self) -> None:
+        for command in (
+            "git branch -D feat/x",
+            "git branch -d -f feat/x",
+            "git branch -df feat/x",
+            "git branch --delete --force feat/x",
+            "git branch -qD feat/x",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNotNone(GUARD.block_reason(command))
 
     def test_unquoted_heredoc_substitution_executes(self) -> None:
         self.assertIsNotNone(GUARD.block_reason("cat > n.md <<EOF\n$(git branch -D old)\nEOF"))

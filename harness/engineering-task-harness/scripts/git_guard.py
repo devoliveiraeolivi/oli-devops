@@ -18,10 +18,6 @@ RULES: tuple[tuple[re.Pattern[str], str], ...] = (
         "remoção ou prune de worktree",
     ),
     (
-        re.compile(r"\bgit\b[^\n;&|]*\bbranch\b[^\n;&|]*\s(?:-[dD]|--delete)\b", re.IGNORECASE),
-        "remoção de branch local",
-    ),
-    (
         re.compile(
             r"\bgit\b[^\n;&|]*\bpush\b[^\n;&|]*\s(?:--delete\b|-d\b|--prune\b|--mirror\b|\+?:[\w./-]+)",
             re.IGNORECASE,
@@ -29,6 +25,10 @@ RULES: tuple[tuple[re.Pattern[str], str], ...] = (
         "remoção de branch remota",
     ),
 )
+
+# Exclusão forçada de branch local (`-D`, `-d -f`, `--delete --force`). `git branch -d` passa: o
+# próprio git só apaga branch já mergeada.
+BRANCH = re.compile(r"\bgit\b[^\n;&|]*?\bbranch(\s[^\n;&|]*)")
 
 # `rm` como palavra de comando (não `--rm` do docker); flags recursiva e forçada em qualquer ordem.
 RM = re.compile(r"(?<![\w-])rm\b([^\n;&|]*)")
@@ -130,10 +130,23 @@ def protected(path: str) -> bool:
     return bool(PROTECTED_ROOT.search(path)) and os.path.lexists(os.path.join(path, ".git"))
 
 
+def forced_branch_delete(text: str) -> bool:
+    for match in BRANCH.finditer(text):
+        flags = [word for word in match.group(1).split() if word.startswith("-")]
+        short = "".join(flag[1:] for flag in flags if not flag.startswith("--"))
+        delete = "d" in short or "--delete" in flags
+        force = "f" in short or "--force" in flags
+        if "D" in short or (delete and force):
+            return True
+    return False
+
+
 def rule_violation(text: str, command: str, cwd: str | None) -> str | None:
     for pattern, label in RULES:
         if pattern.search(text):
             return label
+    if forced_branch_delete(text):
+        return "remoção forçada de branch local"
     for match in RM.finditer(text):
         args = match.group(1)
         if not (RECURSIVE.search(args) and FORCE.search(args)):
