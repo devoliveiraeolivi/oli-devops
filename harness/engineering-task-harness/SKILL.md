@@ -18,19 +18,19 @@ Leia [execution-discipline](references/execution-discipline.md) antes de editar 
    - `debug`: reproduza onde o erro aparece; corrija em worktree dedicada, salvo autorização para editar o reproducer.
 2. Rode `context` (abaixo). Depois use a skill de mapa e o comando de verificação que o AGENTS.md/CLAUDE.md do repo declaram. Busca ampla só para o que o mapa não resolver.
 3. Procure branch, worktree e PR relacionados. Reuse só com a mesma linhagem e o mesmo objetivo.
-4. **Gate 0 — decisão registrada.** Desenho discutido vira lista numerada na spec (o que foi decidido, o que fica fora, tamanho previsto), confirmada pelo usuário antes do código. Implemente numa sessão nova, a partir da lista.
+4. **Gate 0 — decisão registrada.** Desenho discutido vira lista numerada na spec (o que foi decidido, o que fica fora, tamanho previsto), confirmada pelo usuário antes do código; registre o commit da versão confirmada. Implemente numa sessão nova, a partir da lista.
 5. **Gate 1 — premissas conferidas** em contexto novo antes do código.
 6. Fixe resultado, escopo, menor delta, autoridade e verificação. Calibre o horizonte: solução prática agora vs. fundação durável, pelo melhor custo-benefício total. Reuse o que o mapa aponta antes de criar helper ou abstração.
 7. **Gate 2 — invariantes viram testes** que falham antes da implementação.
 8. Implemente na worktree do agente: no Codex, a da task; no Claude, `EnterWorktree`. `create` é o fallback manual. Fora da lista de decisões, pare e pergunte: o quê, por quê, custo.
-9. **Gate 3 — conformidade, depois bugs**, em contexto novo, antes do PR: primeiro o diff contra a lista de decisões; o que não foi pedido é bloqueio.
+9. **Gate 3 — conformidade, depois bugs**, em contexto novo, antes do PR: primeiro o diff contra a lista aprovada, lida do commit registrado e nunca da branch do PR; o que não foi pedido é bloqueio.
 10. **Gate 4 — dado real** antes de reportar número ou estado de dados.
 11. Handoff: repositório, path, branch ou detached HEAD, base, HEAD inicial, mudanças, verificações executadas e gates pulados com o motivo.
 12. Antes de encerrar ou limpar: `inventory` e `assess`. A saída é triagem, nunca autorização de remoção.
 
 Cada gate tem gatilho observável e procedimento em [quality-gates](references/quality-gates.md). Gatilho presente, gate obrigatório.
 
-**Disjuntor:** segunda rodada de revisão (depois de corrigir a primeira) ainda com achado P0/P1, ou diff maior que o dobro do tamanho previsto no Gate 0: pare e reporte ao usuário. Não siga consertando.
+**Disjuntor:** segunda rodada de revisão (depois de corrigir a primeira) ainda com achado P0/P1, ou arquivos de produção alterados acima do dobro do previsto no Gate 0 (testes não contam): pare e reporte ao usuário. Não siga consertando.
 
 ## Comandos
 
