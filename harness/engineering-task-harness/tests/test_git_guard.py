@@ -185,6 +185,95 @@ class GitGuardTest(unittest.TestCase):
         command = "docker run --rm -v /Users/me/Documents/GitHub/repo:/w img"
         self.assertIsNone(GUARD.block_reason(command))
 
+    # "Git" em texto livre não casa; em dado, só a substituição de comando é analisada.
+    def test_allows_git_words_in_pr_body_and_commit_message(self) -> None:
+        for command in (
+            "gh pr create --title t --body 'O `git_guard` bloqueava Git push --delete e "
+            "git worktree remove'",
+            "git commit -m 'docs: o `git_guard` cita git branch -D'",
+            "gh pr create --title t --body 'Corrige o guard (falso positivo): `git_guard` e "
+            "git push --delete'",
+            "gh pr create --title t --body-file - <<'EOF'\n"
+            "Git: rode Git worktree remove e Git push origin --delete x depois\nEOF",
+            "git commit -F - <<'EOF'\nfix: Git branch -D bloqueado\nEOF",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNone(GUARD.block_reason(command))
+
+    def test_allows_git_words_in_printed_text(self) -> None:
+        for command in (
+            'echo "Git push --delete feito"',
+            "printf '%s\\n' 'Git worktree prune roda depois'",
+            "echo 'Git push --delete feito",  # aspas desbalanceadas: texto cru
+        ):
+            with self.subTest(command=command):
+                self.assertIsNone(GUARD.block_reason(command))
+
+    def test_blocks_git_invocation_in_any_position(self) -> None:
+        for command in (
+            "git -C /repo worktree remove /repo-wt",
+            "/usr/bin/git branch -D codex/old",
+            "find . -name x -exec git branch -D {} \\;",
+            "timeout 5 git push origin --delete codex/old",
+            "echo `git worktree prune`",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNotNone(GUARD.block_reason(command))
+
+    def test_blocks_nested_substitution_inside_data_argument(self) -> None:
+        for command in (
+            'git commit -m "$(git branch -D x; (true))"',
+            'git commit -m "texto $(git worktree prune && echo $(date))"',
+            'git commit -m "$(git push origin --delete $(git branch --show-current))"',
+            "git commit -F - <<EOF\n$(git branch -D \"$(echo old)\")\nEOF",
+            "git push origin :topic=old",
+            # `)` entre aspas ou em `case` fecha a regex cedo; crase escapada aninha.
+            "git commit -m \"$(echo ')' ; git branch -D x)\"",
+            'git commit -m "$(echo \\"a)b\\"; git worktree prune)"',
+            "git commit -m \"$(true) $(echo ')'; git push origin --delete x)\"",
+            'git commit -m "$(case x in x) git branch -D x;; esac)"',
+            'git commit -m "`echo \\`git branch -D old\\``"',
+            'git commit -m "$(git worktree prune"',
+        ):
+            with self.subTest(command=command):
+                self.assertIsNotNone(GUARD.block_reason(command))
+
+    def test_blocks_git_command_held_in_value(self) -> None:
+        for command in (
+            'X="git worktree prune"; $X',
+            'git rebase --exec="git branch -D x" main',
+            "git -c alias.limpa='worktree prune' limpa",
+            "git -c alias.limpa='!git branch -D old' limpa",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNotNone(GUARD.block_reason(command))
+
+    def test_blocks_heredoc_executed_by_gh_or_git(self) -> None:
+        for command in (
+            "git -c alias.roda='!sh' roda <<'EOF'\ngit worktree prune\nEOF",
+            "gh codespace ssh -c cs <<'EOF'\ngit worktree prune\nEOF",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNotNone(GUARD.block_reason(command))
+
+    def test_allows_redirection_in_data_heredoc(self) -> None:
+        for command in (
+            "cat > n.md 2>&1 <<'EOF'\nnunca git branch -D\nEOF",
+            "cat >&2 <<'EOF'\nnunca git worktree prune\nEOF",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNone(GUARD.block_reason(command))
+
+    def test_blocks_shell_heredoc_after_data_heredoc_command(self) -> None:
+        for command in (
+            "cat x; bash <<'EOF'\ngit worktree prune\nEOF",
+            "git status && bash <<'EOF'\ngit worktree prune\nEOF",
+            "cat x & bash <<'EOF'\ngit worktree prune\nEOF",
+            "git-shell <<'EOF'\ngit worktree prune\nEOF",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNotNone(GUARD.block_reason(command))
+
 
 if __name__ == "__main__":
     unittest.main()

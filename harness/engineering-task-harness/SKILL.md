@@ -18,7 +18,7 @@ Leia [execution-discipline](references/execution-discipline.md) antes de editar 
    - `debug`: reproduza onde o erro aparece; corrija em worktree dedicada, salvo autorização para editar o reproducer.
 2. Rode `context` (abaixo). Depois use a skill de mapa e o comando de verificação que o AGENTS.md/CLAUDE.md do repo declaram. Busca ampla só para o que o mapa não resolver.
 3. Procure branch, worktree e PR relacionados. Reuse só com a mesma linhagem e o mesmo objetivo.
-4. **Gate 0 — decisão registrada.** Desenho discutido vira lista numerada na spec (o que foi decidido, o que fica fora, tamanho previsto), confirmada pelo usuário antes do código; registre o commit da versão confirmada. Implemente numa sessão nova, a partir da lista.
+4. **Gate 0 — decisão registrada.** Desenho discutido vira lista numerada na spec (o que foi decidido, o que fica fora, tamanho previsto em arquivos de produção; testes e docs não contam), confirmada pelo usuário antes do código; registre o commit da versão confirmada. Implemente numa sessão nova, a partir da lista.
 5. **Gate 1 — premissas conferidas** em contexto novo antes do código.
 6. Fixe resultado, escopo, menor delta, autoridade e verificação. Calibre o horizonte: solução prática agora vs. fundação durável, pelo melhor custo-benefício total. Reuse o que o mapa aponta antes de criar helper ou abstração.
 7. **Gate 2 — invariantes viram testes** que falham antes da implementação.
@@ -30,7 +30,7 @@ Leia [execution-discipline](references/execution-discipline.md) antes de editar 
 
 Cada gate tem gatilho observável e procedimento em [quality-gates](references/quality-gates.md). Gatilho presente, gate obrigatório.
 
-**Disjuntor:** segunda rodada de revisão (depois de corrigir a primeira) ainda com achado P0/P1, ou arquivos de produção alterados acima do dobro do previsto no Gate 0 (testes não contam): pare e reporte ao usuário. Não siga consertando.
+**Disjuntor:** segunda rodada de revisão (depois de corrigir a primeira) ainda com achado P0/P1, ou arquivos de produção alterados acima do dobro do previsto no Gate 0 (testes e docs não contam): pare e reporte ao usuário. Não siga consertando.
 
 ## Comandos
 
@@ -53,7 +53,7 @@ python3 <skill-dir>/scripts/task_harness.py create --repo <clone-base> --slug <t
 - Detectar um defeito não é entrega: audite o escopo inteiro, reconcilie os achados materiais e entregue o próximo gate humano acionável. Estado bloqueado só para ambiguidade real, fonte ausente, estado corrente inconsistente ou incapacidade do contrato; nunca para correção determinística ainda não preparada.
 - Não faça `git worktree prune`, `git branch -D` ou remoção recursiva como parte automática de hook, fim de chat ou inventário.
 - Hooks só acrescentam contexto ou bloqueiam comandos bem definidos. Nunca decidem limpeza.
-- `git_guard.py` bloqueia remoção crua de worktree, exclusão forçada de branch local (`-D`, `-d -f`) e exclusão de branch remota. `git branch -d` passa: o git só apaga branch já mergeada. `ENGINEERING_HARNESS_ALLOW_RAW_GIT_CLEANUP=1` só depois de aprovação explícita dos paths, branches e SHAs exatos, como prefixo do próprio comando.
+- `git_guard.py` bloqueia remoção crua de worktree, exclusão forçada de branch local (`-D`, `-d -f`) e exclusão de branch remota. `git branch -d` passa: o git só apaga branch já mergeada. As regras diferenciam maiúsculas: "Git" em corpo de PR ou mensagem de commit passa; em mensagem ou corpo, só `$(...)` e crase contam. `ENGINEERING_HARNESS_ALLOW_RAW_GIT_CLEANUP=1` só depois de aprovação explícita dos paths, branches e SHAs exatos, como prefixo do próprio comando.
 - `pre-push-gate.sh` roda a verificação do repo na árvore atual antes do `git push`. É rede de segurança: o hook roda antes do comando, então libera quando o push pode enviar outra coisa que não o HEAD atual (outro ref, troca de branch antes). O CI valida o SHA. `HARNESS_GATE_OK=1 git push` só quando a verificação já passou nesse commit, nesta sessão.
 - `branch-state-guard.sh` bloqueia commit e push de branch cujo PR já foi mergeado. Crie branch nova a partir da base.
 - No Claude, em worktree isolada: corpo do PR em arquivo (`gh pr create --body-file <arquivo>`), sem heredoc; edição com Edit, não `python3 - <<EOF`; git em comandos simples e separados.
