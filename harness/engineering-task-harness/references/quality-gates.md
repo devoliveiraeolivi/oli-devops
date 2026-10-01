@@ -6,10 +6,10 @@ Cada gate tem um gatilho observável. Gatilho presente, gate obrigatório. Gate 
 
 Gatilho: houve discussão de desenho, arquitetura ou alternativas.
 
-1. Grave na spec (onde a regra de docs do repo mandar) uma lista numerada: o que foi decidido, o que fica fora e o tamanho previsto (componentes, arquivos).
-2. O usuário confirma esse texto antes de qualquer código. Sem confirmação, não há implementação.
+1. Grave na spec (onde a regra de docs do repo mandar) uma lista numerada: o que foi decidido, o que fica fora e o tamanho previsto (componentes e arquivos de produção).
+2. O usuário confirma esse texto antes de qualquer código. Sem confirmação, não há implementação. Registre o commit da versão confirmada: ele é a referência do Gate 3.
 3. A implementação começa numa sessão nova, a partir da lista, e não do contexto compactado da discussão.
-4. Mudar uma decisão, no código ou na spec, exige parar e pedir aprovação: o quê, por quê, custo. Com o sim, atualize a lista. Nunca reescreva a spec para justificar o que foi construído.
+4. Mudar uma decisão, no código ou na spec, exige parar e pedir aprovação: o quê, por quê, custo. Com o sim, atualize a lista e registre o novo commit. Nunca reescreva a spec para justificar o que foi construído.
 
 Por quê: no oli-indexador#232, a decisão (coordenador único, journal, sem síntese) ficou só no chat. Depois de 19 compactações, o agente implementou outra arquitetura (segmentos, síntese, reconciliação) e reescreveu a spec 0005 dentro do próprio PR para descrevê-la.
 
@@ -40,7 +40,7 @@ Por quê: escritores de teste delegados sem revisão produziram testes que espel
 
 Gatilho: há diff para PR.
 
-1. Conformidade primeiro. Um agente em contexto novo recebe a lista do Gate 0 e o diff, e responde: implementa exatamente a lista? O que sobra? O que falta? Componente, fase ou abstração fora da lista, ou mudança na lista ou na spec sem aprovação do usuário, é bloqueio. O que falta entra no handoff.
+1. Conformidade primeiro. Um agente em contexto novo recebe a lista aprovada, lida do commit registrado no Gate 0 (`git show <sha>:<spec>`, nunca da branch do PR), e o diff, e responde: implementa exatamente a lista? O que sobra? O que falta? Componente, fase ou abstração fora da lista, ou mudança na lista ou na spec sem aprovação do usuário, é bloqueio. O que falta entra no handoff.
 2. Depois, bugs:
    - Claude: `/code-review` em nível high (medium se o diff for só docs).
    - Segundo par, o outro agente: numa sessão Claude, `codex review --base origin/main`; numa sessão Codex, `/code-review` high numa sessão Claude.
@@ -50,7 +50,7 @@ Por quê: no #232, a revisão de bug achou vários P1 dentro da arquitetura erra
 
 ## Disjuntor
 
-Gatilho: segunda rodada de revisão (depois de corrigir a primeira) ainda com achado P0/P1, ou diff maior que o dobro do tamanho previsto no Gate 0.
+Gatilho: segunda rodada de revisão (depois de corrigir a primeira) ainda com achado P0/P1, ou arquivos de produção alterados acima do dobro do previsto no Gate 0 (testes não contam).
 
 Pare. Não siga consertando. Reporte ao usuário o que foi decidido, o que foi feito, onde divergiu e as opções. Rodadas seguidas de P1 costumam indicar desenho errado, não bug isolado.
 
