@@ -6,7 +6,7 @@ Cada gate tem um gatilho observável. Gatilho presente, gate obrigatório. Gate 
 
 Gatilho: houve discussão de desenho, arquitetura ou alternativas.
 
-1. Grave na spec (onde a regra de docs do repo mandar) uma lista numerada: o que foi decidido, o que fica fora e o tamanho previsto (componentes e arquivos de produção).
+1. Grave na spec (onde a regra de docs do repo mandar) uma lista numerada: o que foi decidido, o que fica fora e o tamanho previsto em arquivos de produção (testes e docs não contam).
 2. O usuário confirma esse texto antes de qualquer código. Sem confirmação, não há implementação. Registre o commit da versão confirmada: ele é a referência do Gate 3.
 3. A implementação começa numa sessão nova, a partir da lista, e não do contexto compactado da discussão.
 4. Mudar uma decisão, no código ou na spec, exige parar e pedir aprovação: o quê, por quê, custo. Com o sim, atualize a lista e registre o novo commit. Nunca reescreva a spec para justificar o que foi construído.
@@ -50,7 +50,7 @@ Por quê: no #232, a revisão de bug achou vários P1 dentro da arquitetura erra
 
 ## Disjuntor
 
-Gatilho: segunda rodada de revisão (depois de corrigir a primeira) ainda com achado P0/P1, ou arquivos de produção alterados acima do dobro do previsto no Gate 0 (testes não contam).
+Gatilho: segunda rodada de revisão (depois de corrigir a primeira) ainda com achado P0/P1, ou arquivos de produção alterados acima do dobro do previsto no Gate 0 (testes e docs não contam).
 
 Pare. Não siga consertando. Reporte ao usuário o que foi decidido, o que foi feito, onde divergiu e as opções. Rodadas seguidas de P1 costumam indicar desenho errado, não bug isolado.
 

@@ -12,15 +12,15 @@ from typing import Any
 
 BYPASS = "ENGINEERING_HARNESS_ALLOW_RAW_GIT_CLEANUP=1"
 
+# Sensível a maiúsculas: o comando é `git`; "Git" em corpo de PR ou mensagem não casa.
 RULES: tuple[tuple[re.Pattern[str], str], ...] = (
     (
-        re.compile(r"\bgit\b[^\n;&|]*\bworktree\s+(?:remove|prune)\b", re.IGNORECASE),
+        re.compile(r"\bgit\b[^\n;&|]*\bworktree\s+(?:remove|prune)\b"),
         "remoção ou prune de worktree",
     ),
     (
         re.compile(
-            r"\bgit\b[^\n;&|]*\bpush\b[^\n;&|]*\s(?:--delete\b|-d\b|--prune\b|--mirror\b|\+?:[\w./-]+)",
-            re.IGNORECASE,
+            r"\bgit\b[^\n;&|]*\bpush\b[^\n;&|]*\s(?:--delete\b|-d\b|--prune\b|--mirror\b|\+?:[\w./-]+)"
         ),
         "remoção de branch remota",
     ),
@@ -41,12 +41,13 @@ PROTECTED_ROOT = re.compile(
 
 # Texto entre aspas e corpo de heredoc contam como comando (conservador: `bash -c`, ssh,
 # pipe para shell, interpretador). Exceção só para contextos de dado conhecidos: mensagem ou
-# corpo de commit/PR/release, padrão de busca e heredoc que só grava arquivo (cat/tee).
+# corpo de commit/PR/release, padrão de busca e heredoc que só grava arquivo (cat/tee). Em dado,
+# só `$(...)` e crase executam.
 DATA_FLAG = re.compile(r"-[A-Za-z]*m|--(?:message|body|title|notes|subject|grep)")
 DATA_ASSIGNMENT = re.compile(r"--(?:message|body|title|notes|subject|grep)=")
 SEARCH_COMMANDS = {"grep", "egrep", "fgrep", "rg", "ag", "ack"}
 WRITER_HEREDOC = re.compile(
-    r"((?:^|[;&|(\n])[ \t]*(?:cat|tee)\b[^\n]*?)"
+    r"((?:^|[;&|(\n])[ \t]*(?:cat|tee)\b(?:[^\n;&|]|[<>]&|&>)*?)"  # `&` só em redirecionamento
     r"<<-?[ \t]*(['\"]?)([A-Za-z_]\w*)\2([^\n]*)\n((?:.*?\n)?)[ \t]*\3[ \t]*(?=\n|$)",
     re.DOTALL,
 )
@@ -65,8 +66,6 @@ def strip_writer_heredoc(match: re.Match[str]) -> str:
 
 
 def is_data(token: str, words: list[str]) -> bool:
-    if "$(" in token or "`" in token:
-        return False  # substituição de comando executa mesmo dentro de mensagem ou busca
     previous = words[-1] if words else ""
     return bool(
         DATA_FLAG.fullmatch(previous)
@@ -104,7 +103,13 @@ def scan_segments(command: str) -> list[tuple[str, bool]] | None:
             words, kept = [], []
             continue
         # Token com espaço só existe se veio entre aspas (ou escapado).
-        if not (any(char.isspace() for char in token) and is_data(token, words)):
+        if any(char.isspace() for char in token) and is_data(token, words):
+            rest = SUBSTITUTION.sub("", token)
+            # Substituição que a regex não casa (`(` ou `)` dentro de `$(...)`, inclusive entre
+            # aspas ou em `case`; crase escapada; `$(` sem fechar): o token inteiro é analisado.
+            nested = "\\`" in token or "`" in rest or "$(" in rest or ("$(" in token and ")" in rest)
+            kept.extend([token] if nested else SUBSTITUTION.findall(token))
+        else:
             kept.append(token)
         words.append(token)
     return segments
