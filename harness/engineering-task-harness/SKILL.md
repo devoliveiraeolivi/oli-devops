@@ -56,6 +56,7 @@ python3 <skill-dir>/scripts/task_harness.py create --repo <clone-base> --slug <t
 - `git_guard.py` bloqueia remoção crua de worktree, exclusão forçada de branch local (`-D`, `-d -f`) e exclusão de branch remota. `git branch -d` passa: o git só apaga branch já mergeada. `ENGINEERING_HARNESS_ALLOW_RAW_GIT_CLEANUP=1` só depois de aprovação explícita dos paths, branches e SHAs exatos, como prefixo do próprio comando.
 - `pre-push-gate.sh` roda a verificação do repo na árvore atual antes do `git push`. É rede de segurança: o hook roda antes do comando, então libera quando o push pode enviar outra coisa que não o HEAD atual (outro ref, troca de branch antes). O CI valida o SHA. `HARNESS_GATE_OK=1 git push` só quando a verificação já passou nesse commit, nesta sessão.
 - `branch-state-guard.sh` bloqueia commit e push de branch cujo PR já foi mergeado. Crie branch nova a partir da base.
+- No Claude, em worktree isolada: corpo do PR em arquivo (`gh pr create --body-file <arquivo>`), sem heredoc; edição com Edit, não `python3 - <<EOF`; git em comandos simples e separados.
 - Hooks locais dão feedback. Rulesets e checks obrigatórios do GitHub são a autoridade de merge.
 
 ## Saída

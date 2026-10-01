@@ -153,7 +153,10 @@ def rule_violation(text: str, command: str, cwd: str | None) -> str | None:
             continue
         paths = [resolve_operand(arg, cwd) for arg in args.split() if not arg.startswith("-")]
         if PROTECTED_ROOT.search(command) or any(path and protected(path) for path in paths):
-            return "rm recursivo em raiz usada por repositórios ou worktrees"
+            return (
+                "rm recursivo em raiz usada por repositórios ou worktrees (se o rm não apaga "
+                "repo nem worktree, rode-o num comando separado, sem citar o repo)"
+            )
     return None
 
 
