@@ -52,6 +52,23 @@ Fonte: seções `## Summary` e `## Pontas soltas / follow-ups` das PRs mergeadas
       [oli-etl#34](https://github.com/devoliveiraeolivi/oli-etl/pull/34). **Próxima execução:
       one-shot agendado 2026-07-09**; se nenhum bump-PR do Renovate até lá → bump manual nos
       5 restantes (mesmo padrão do #34).
+      **Execução 2026-07-09 (segunda, one-shot agendado):** 5/6 consumers ainda pinavam
+      `security.yml@v1.1.1` (pin lido direto do workflow — exceção oli-gateway: job dentro de
+      `ci.yml`); zero bump-PRs do Renovate (`search_pull_requests ... author:app/renovate`,
+      0 resultados nos 5 repos) e zero branch/PR manual pré-existente (checado por owner+branch
+      antes de criar, sem duplicar). Regra de parada (b) aplicada: bump manual aberto nos 5
+      restantes, mesmo padrão do #34 —
+      [oli-gateway#175](https://github.com/devoliveiraeolivi/oli-gateway/pull/175),
+      [oli-auth#45](https://github.com/devoliveiraeolivi/oli-auth/pull/45),
+      [oli-scraper#329](https://github.com/devoliveiraeolivi/oli-scraper/pull/329),
+      [oli-ops#68](https://github.com/devoliveiraeolivi/oli-ops/pull/68),
+      [anp-bi-etl#21](https://github.com/devoliveiraeolivi/anp-bi-etl/pull/21).
+      `oli-etl` segue OK (v1.2.0 desde #34, sem ação nesta rodada). Estado: **EM_ANDAMENTO** —
+      5 PRs abertos, nenhum mergeado ainda; `ADOPTION-STATUS.md` § Propagation gaps item 1
+      **não** marcado como resolvido (regra do loop: só ao ficar 6/6 ≥ v1.2.0). Próxima
+      execução: confirmar merge + CI verde nos 5 PRs; se algum ficar parado, dar seguimento
+      manual (rebase/CI fix) até mergear — só então desligar o loop e atualizar
+      `ADOPTION-STATUS.md`.
 - [ ] **Premissas do ponytail ainda não verificadas de forma independente** — o trial do usuário
       validou o valor prático (2026-07-02), mas as duas premissas técnicas da nota removida seguem
       sem verificação instrumentada: (a) a injeção ambiente alcançar os subagentes da Fase 4;
